@@ -1,0 +1,234 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: #E0E5EC;
+    --foreground: #3D4852;
+    --muted: #6B7280;
+    --accent: #6C63FF;
+    --accent-light: #8B84FF;
+    --accent-secondary: #38B2AC;
+    --shadow-light: rgba(255, 255, 255, 0.55);
+    --shadow-dark: rgb(163, 177, 198, 0.65);
+  }
+
+  body {
+    background-color: #E0E5EC;
+    color: #3D4852;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.025em;
+  }
+}
+
+/* Typography Classes */
+.font-display {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+.font-body {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+}
+
+.font-num, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Neumorphic Dual Opposing Shadow Utility Classes */
+.shadow-neu-extrude {
+  box-shadow: 9px 9px 16px rgb(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
+}
+
+.shadow-neu-extrude-hover {
+  box-shadow: 12px 12px 20px rgb(163, 177, 198, 0.7), -12px -12px 20px rgba(255, 255, 255, 0.6);
+}
+
+.shadow-neu-extrude-sm {
+  box-shadow: 5px 5px 10px rgb(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5);
+}
+
+.shadow-neu-extrude-lg {
+  box-shadow: 16px 16px 28px rgb(163, 177, 198, 0.65), -16px -16px 28px rgba(255, 255, 255, 0.6);
+}
+
+.shadow-neu-inset {
+  box-shadow: inset 6px 6px 10px rgb(163, 177, 198, 0.6), inset -6px -6px 10px rgba(255, 255, 255, 0.5);
+}
+
+.shadow-neu-inset-deep {
+  box-shadow: inset 10px 10px 20px rgb(163, 177, 198, 0.7), inset -10px -10px 20px rgba(255, 255, 255, 0.6);
+}
+
+.shadow-neu-inset-sm {
+  box-shadow: inset 3px 3px 6px rgb(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+}
+
+/* Neumorphic Cards */
+.card-neu {
+  background-color: #E0E5EC;
+  border-radius: 32px;
+  box-shadow: 9px 9px 16px rgb(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
+  border: none;
+  transition: all 300ms ease-out;
+}
+
+.card-neu:hover {
+  transform: translateY(-2px);
+  box-shadow: 12px 12px 20px rgb(163, 177, 198, 0.7), -12px -12px 20px rgba(255, 255, 255, 0.6);
+}
+
+/* Wells for carved depth */
+.well-neu {
+  background-color: #E0E5EC;
+  box-shadow: inset 6px 6px 10px rgb(163, 177, 198, 0.6), inset -6px -6px 10px rgba(255, 255, 255, 0.5);
+}
+
+.well-neu-deep {
+  background-color: #E0E5EC;
+  box-shadow: inset 10px 10px 20px rgb(163, 177, 198, 0.7), inset -10px -10px 20px rgba(255, 255, 255, 0.6);
+}
+
+.well-neu-sm {
+  background-color: #E0E5EC;
+  box-shadow: inset 3px 3px 6px rgb(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+}
+
+/* Neumorphic Buttons */
+.btn-neu {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  border-radius: 16px;
+  border: none;
+  background-color: #E0E5EC;
+  color: #3D4852;
+  box-shadow: 5px 5px 10px rgb(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all 300ms ease-out;
+}
+
+.btn-neu:hover {
+  transform: translateY(-1px);
+  box-shadow: 9px 9px 16px rgb(163, 177, 198, 0.65), -9px -9px 16px rgba(255, 255, 255, 0.55);
+}
+
+.btn-neu:active {
+  transform: translateY(0.5px);
+  box-shadow: inset 3px 3px 6px rgb(163, 177, 198, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+}
+
+.btn-neu-primary {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  border-radius: 16px;
+  border: none;
+  background-color: #6C63FF;
+  color: #FFFFFF;
+  box-shadow: 5px 5px 10px rgb(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all 300ms ease-out;
+}
+
+.btn-neu-primary:hover {
+  background-color: #8B84FF;
+  transform: translateY(-1px);
+  box-shadow: 9px 9px 16px rgb(163, 177, 198, 0.65), -9px -9px 16px rgba(255, 255, 255, 0.55);
+}
+
+.btn-neu-primary:active {
+  transform: translateY(0.5px);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.25), inset -4px -4px 8px rgba(255, 255, 255, 0.2);
+}
+
+.btn-neu-teal {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  border-radius: 16px;
+  border: none;
+  background-color: #38B2AC;
+  color: #FFFFFF;
+  box-shadow: 5px 5px 10px rgb(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all 300ms ease-out;
+}
+
+.btn-neu-teal:hover {
+  background-color: #4FD1C5;
+  transform: translateY(-1px);
+  box-shadow: 9px 9px 16px rgb(163, 177, 198, 0.65), -9px -9px 16px rgba(255, 255, 255, 0.55);
+}
+
+.btn-neu-teal:active {
+  transform: translateY(0.5px);
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.25), inset -4px -4px 8px rgba(255, 255, 255, 0.2);
+}
+
+/* Inputs */
+.input-neu {
+  font-family: 'DM Sans', sans-serif;
+  border-radius: 16px;
+  border: none;
+  background-color: #E0E5EC;
+  color: #3D4852;
+  box-shadow: inset 6px 6px 10px rgb(163, 177, 198, 0.6), inset -6px -6px 10px rgba(255, 255, 255, 0.5);
+  transition: all 300ms ease-out;
+}
+
+.input-neu:focus {
+  outline: none;
+  box-shadow: inset 10px 10px 20px rgb(163, 177, 198, 0.7), inset -10px -10px 20px rgba(255, 255, 255, 0.6);
+  box-sizing: border-box;
+}
+
+/* Ambient Floating Animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Smooth Neumorphic Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #E0E5EC;
+  box-shadow: inset 2px 2px 4px rgb(163, 177, 198, 0.5), inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+  box-shadow: 2px 2px 4px rgb(163, 177, 198, 0.5), -2px -2px 4px rgba(255, 255, 255, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A0AEC0;
+}

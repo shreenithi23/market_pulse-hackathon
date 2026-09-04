@@ -1,0 +1,6 @@
+{
+  "name": "Smart Market Watchlist",
+  "description": "Intelligent market watchlist with change detection, explainable attention scoring, event lifecycle tracking, sector correlation, and personalized memory.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
