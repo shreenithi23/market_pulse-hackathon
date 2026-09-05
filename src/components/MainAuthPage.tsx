@@ -788,13 +788,6 @@ export const MainAuthPage: React.FC<MainAuthPageProps> = ({
           <div>
             <span>DeltaTrace Market Radar • Intelligent Baseline Memory & Anomaly Tracking</span>
           </div>
-          <div className="flex items-center gap-4">
-            <span>Server: Active</span>
-            <span>•</span>
-            <span>Port: 3000</span>
-            <span>•</span>
-            <span>Secure Token Auth</span>
-          </div>
         </div>
       </footer>
     </div>
