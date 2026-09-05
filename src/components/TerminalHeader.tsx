@@ -11,7 +11,8 @@ import {
   LogOut,
   LogIn,
   UserPlus,
-  Settings
+  Settings,
+  Menu
 } from 'lucide-react';
 
 interface TerminalHeaderProps {
@@ -26,6 +27,7 @@ interface TerminalHeaderProps {
   onOpenProfile: () => void;
   onLogout?: () => void;
   onGoToAuthPage?: () => void;
+  onToggleSidebar?: () => void;
 }
 
 export const TerminalHeader: React.FC<TerminalHeaderProps> = ({
@@ -37,7 +39,8 @@ export const TerminalHeader: React.FC<TerminalHeaderProps> = ({
   onOpenAuth,
   onOpenProfile,
   onLogout,
-  onGoToAuthPage
+  onGoToAuthPage,
+  onToggleSidebar
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -77,8 +80,20 @@ export const TerminalHeader: React.FC<TerminalHeaderProps> = ({
   return (
     <header className="relative bg-[#E0E5EC] px-4 py-3.5 shadow-neu-extrude z-30">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-        {/* Left: Brand & Subtitle */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Left: Circular Analytics Sidebar Toggle (Opposite side of Profile Circle) + Brand */}
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          {onToggleSidebar && (
+            <button
+              id="btn-toggle-sidebar"
+              onClick={onToggleSidebar}
+              className="w-10 h-10 rounded-full bg-[#E0E5EC] shadow-neu-extrude hover:shadow-neu-inset active:shadow-neu-inset-sm flex items-center justify-center transition-all duration-300 relative border border-[#6C63FF]/30 hover:border-[#6C63FF] focus:outline-none focus:ring-2 focus:ring-[#6C63FF]/40 group touch-manipulation text-[#6C63FF] shrink-0"
+              title="Open Analytics Modules"
+              aria-label="Open Analytics Modules"
+            >
+              <Menu className="h-5 w-5 group-hover:scale-110 transition-transform" strokeWidth={2.2} />
+            </button>
+          )}
+
           <div className="flex items-center gap-2.5 bg-[#E0E5EC] text-[#3D4852] px-3.5 py-2 rounded-2xl shadow-neu-extrude-sm hover:-translate-y-0.5 hover:shadow-neu-extrude transition-all duration-300">
             <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset-sm">
               <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} />

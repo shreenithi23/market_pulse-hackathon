@@ -5,7 +5,6 @@ import {
   WatchlistRecord
 } from './types/market';
 import { TerminalHeader } from './components/TerminalHeader';
-import { MemoryBaselineBanner } from './components/MemoryBaselineBanner';
 import { ExecutiveBriefing } from './components/ExecutiveBriefing';
 import { WatchlistPane } from './components/WatchlistPane';
 import { EventLifecyclePane } from './components/EventLifecyclePane';
@@ -409,27 +408,14 @@ export default function App() {
         }}
         onLogout={handleLogout}
         onGoToAuthPage={() => setCurrentView('AUTH_PAGE')}
+        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
       />
 
       {/* Top-Level Tab Navigation: Simple Main Watchlist vs. Dedicated Specialized Tabs */}
       <nav className="border-b border-[#D1D9E6] bg-[#E0E5EC] px-3 sm:px-4 py-2.5 sm:py-3 sticky top-0 z-20 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4 overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 py-0.5">
-            {/* 1. Sidebar Toggle Button: Opens Analytical Modules Drawer */}
-            <button
-              id="btn-toggle-sidebar"
-              onClick={() => setIsSidebarOpen(true)}
-              className="btn-neu px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation text-[#3D4852] hover:text-[#6C63FF]"
-              title="Open Market Analytics Modules"
-            >
-              <Menu className="h-4 w-4 text-[#6C63FF]" strokeWidth={2.4} />
-              <span>Intelligence Modules</span>
-              <span className="bg-[#E0E5EC] shadow-neu-inset-sm text-[#6C63FF] px-2 py-0.5 text-[10px] font-bold rounded-lg">
-                5
-              </span>
-            </button>
-
-            {/* 2. Main Watchlist Tab Button */}
+            {/* 1. Main Watchlist Tab Button */}
             <button
               id="tab-nav-watchlist"
               onClick={() => setActiveTab('WATCHLIST')}
@@ -449,7 +435,7 @@ export default function App() {
               )}
             </button>
 
-            {/* 3. Active Module Breadcrumb (When an analytical module is selected) */}
+            {/* 2. Active Module Breadcrumb (When an analytical module is selected from sidebar) */}
             {activeTab !== 'WATCHLIST' && (
               <div className="flex items-center gap-2 pl-2 border-l border-[#D1D9E6]">
                 <span className="bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset px-3 py-1.5 text-xs font-display font-bold uppercase rounded-xl flex items-center gap-1.5 shrink-0">
@@ -490,16 +476,6 @@ export default function App() {
           </div>
         </div>
       </nav>
-
-      {/* 4. Memory Baseline Banner (Always accessible at top) */}
-      <MemoryBaselineBanner
-        memory={data.memory}
-        needsAttentionCount={data.systemSummary.needsAttentionCount}
-        worthKnowingCount={data.systemSummary.worthKnowingCount}
-        onTakeSnapshot={handleTakeSnapshot}
-        onSelectOffset={handleSelectOffset}
-        isTakingSnapshot={false}
-      />
 
       {/* 5. Main Area (Active Tab) */}
       <main className="flex-1 flex flex-col py-4">
