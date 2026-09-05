@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Search, Send, HelpCircle, Terminal, X } from 'lucide-react';
+import { Search, Send, HelpCircle, Terminal, X, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CommandLineBarProps {
   onExecuteCommand: (command: string) => void;
@@ -13,6 +13,7 @@ export const CommandLineBar: React.FC<CommandLineBarProps> = ({
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [showHelp, setShowHelp] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -66,9 +67,9 @@ export const CommandLineBar: React.FC<CommandLineBarProps> = ({
   return (
     <div className="bg-[#E0E5EC] px-4 py-4 font-body shadow-neu-inset-sm">
       <div className="max-w-7xl mx-auto">
-        <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           {/* Carved Deep Inset Well for Search Input */}
-          <div className="flex-1 min-w-[260px] flex items-center gap-3 bg-[#E0E5EC] px-4 py-2.5 rounded-2xl shadow-neu-inset focus-within:shadow-neu-inset-deep transition-all duration-300">
+          <div className="flex-1 min-w-0 flex items-center gap-2.5 sm:gap-3 bg-[#E0E5EC] px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl shadow-neu-inset focus-within:shadow-neu-inset-deep transition-all duration-300 min-h-[42px]">
             <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset-sm shrink-0">
               <Search className="h-3.5 w-3.5" strokeWidth={2.2} />
             </span>
@@ -79,63 +80,90 @@ export const CommandLineBar: React.FC<CommandLineBarProps> = ({
               value={inputVal}
               onChange={(e) => setInputVal(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type command or ticker (e.g. 'snapshot', 'add PLTR', 'filter attention', 'compare 4h', 'help')..."
-              className="w-full bg-transparent text-[#3D4852] font-body text-sm font-medium placeholder-[#A0AEC0] focus:outline-none"
+              placeholder="Type command (e.g. 'snapshot', 'add PLTR', 'filter attn', 'target NVDA 12500')..."
+              className="w-full bg-transparent text-[#3D4852] font-body text-xs sm:text-sm font-medium placeholder-[#A0AEC0] focus:outline-none"
               autoComplete="off"
               spellCheck="false"
             />
           </div>
 
-          <button
-            id="btn-cli-execute"
-            type="submit"
-            className="btn-neu-primary px-5 py-2.5 text-xs font-bold rounded-2xl flex items-center gap-2 hover:-translate-y-0.5 active:translate-y-0.5 transition-all duration-300"
-          >
-            <Send className="h-3.5 w-3.5" strokeWidth={2} />
-            <span>Run</span>
-          </button>
+          <div className="flex items-center gap-2 justify-end shrink-0">
+            <button
+              id="btn-cli-execute"
+              type="submit"
+              className="btn-neu-primary flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 sm:gap-2 hover:-translate-y-0.5 active:translate-y-0.5 transition-all duration-300 min-h-[40px] touch-manipulation"
+            >
+              <Send className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+              <span>Run</span>
+            </button>
 
-          <button
-            id="btn-cli-help"
-            type="button"
-            onClick={() => setShowHelp(prev => !prev)}
-            className="btn-neu px-4 py-2.5 text-xs font-bold rounded-2xl flex items-center gap-2 text-[#3D4852] hover:-translate-y-0.5 active:translate-y-0.5 transition-all duration-300"
-            title="Command Guide"
-          >
-            <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset-sm">
-              <HelpCircle className="h-3 w-3" strokeWidth={2.2} />
-            </span>
-            <span>Guide</span>
-          </button>
+            <button
+              id="btn-cli-shortcuts-toggle"
+              type="button"
+              onClick={() => setShowShortcuts(prev => !prev)}
+              className={`btn-neu px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 sm:gap-2 hover:-translate-y-0.5 active:translate-y-0.5 transition-all duration-300 min-h-[40px] touch-manipulation ${
+                showShortcuts
+                  ? 'text-[#6C63FF] shadow-neu-inset font-extrabold'
+                  : 'text-[#3D4852]'
+              }`}
+              title={showShortcuts ? "Hide Quick Shortcuts" : "Show Quick Shortcuts"}
+            >
+              <span className={`flex h-5 w-5 items-center justify-center rounded-lg bg-[#E0E5EC] shadow-neu-inset-sm transition-colors shrink-0 ${
+                showShortcuts ? 'text-[#6C63FF]' : 'text-[#6B7280]'
+              }`}>
+                <Zap className="h-3 w-3" strokeWidth={2.2} />
+              </span>
+              <span className="hidden xs:inline sm:inline">Shortcuts</span>
+              <span className={`transition-transform duration-200 ${showShortcuts ? 'rotate-180 text-[#6C63FF]' : 'text-[#9CA3AF]'}`}>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </span>
+            </button>
+
+            <button
+              id="btn-cli-help"
+              type="button"
+              onClick={() => setShowHelp(prev => !prev)}
+              className="btn-neu px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 sm:gap-2 text-[#3D4852] hover:-translate-y-0.5 active:translate-y-0.5 transition-all duration-300 min-h-[40px] touch-manipulation"
+              title="Command Guide"
+            >
+              <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset-sm shrink-0">
+                <HelpCircle className="h-3 w-3" strokeWidth={2.2} />
+              </span>
+              <span className="hidden xs:inline sm:inline">Guide</span>
+            </button>
+          </div>
         </form>
 
-        {/* Quick shortcut tactile chips */}
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-          <span className="font-display font-bold text-[#6B7280] uppercase tracking-wider text-[11px] mr-1">
-            Quick Shortcuts:
-          </span>
-          {quickCommands.map((qc) => (
-            <button
-              key={qc.cmd}
-              type="button"
-              onClick={() => onExecuteCommand(qc.cmd)}
-              className="btn-neu px-3.5 py-1.5 font-display text-xs font-bold rounded-full text-[#3D4852] hover:-translate-y-0.5 active:translate-y-0.5 transition-all duration-300"
-            >
-              {qc.label}
-            </button>
-          ))}
-        </div>
+        {/* Collapsible Quick Shortcut Tactile Chips */}
+        {showShortcuts && (
+          <div className="mt-3 flex items-center gap-2 text-xs p-3 rounded-2xl bg-[#E0E5EC] shadow-neu-inset-sm animate-in fade-in slide-in-from-top-1 duration-200 border border-[#D1D9E6]/30 overflow-x-auto no-scrollbar sm:flex-wrap">
+            <span className="font-display font-bold text-[#6B7280] uppercase tracking-wider text-[11px] mr-1 flex items-center gap-1.5 whitespace-nowrap shrink-0">
+              <Zap className="h-3 w-3 text-[#6C63FF]" />
+              Shortcuts:
+            </span>
+            {quickCommands.map((qc) => (
+              <button
+                key={qc.cmd}
+                type="button"
+                onClick={() => onExecuteCommand(qc.cmd)}
+                className="btn-neu px-3.5 py-1.5 font-display text-xs font-bold rounded-full text-[#3D4852] hover:-translate-y-0.5 active:translate-y-0.5 transition-all duration-300 hover:text-[#6C63FF] whitespace-nowrap shrink-0 min-h-[32px] touch-manipulation"
+              >
+                {qc.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Pop-out Command Guide in Neumorphic Extruded Panel */}
         {showHelp && (
-          <div className="relative mt-4 bg-[#E0E5EC] rounded-[32px] shadow-neu-extrude p-6 transition-all duration-300">
+          <div className="relative mt-4 bg-[#E0E5EC] rounded-[28px] sm:rounded-[32px] shadow-neu-extrude p-4 sm:p-6 transition-all duration-300">
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#D1D9E6]">
-              <div className="flex items-center gap-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset-sm">
+            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 border-b border-[#D1D9E6]">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset-sm shrink-0">
                   <Terminal className="h-4 w-4" strokeWidth={2.2} />
                 </span>
-                <span className="font-display font-extrabold text-sm uppercase tracking-wider text-[#3D4852]">
+                <span className="font-display font-extrabold text-xs sm:text-sm uppercase tracking-wider text-[#3D4852]">
                   COMMAND REFERENCE
                 </span>
               </div>
@@ -147,7 +175,7 @@ export const CommandLineBar: React.FC<CommandLineBarProps> = ({
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-body text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 font-body text-xs">
               <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#E0E5EC] shadow-neu-inset-sm">
                 <code className="font-mono font-bold bg-[#E0E5EC] px-2.5 py-1 rounded-xl shadow-neu-extrude-sm text-[#6C63FF]">profile</code>
                 <span className="text-[#6B7280]">Access trading profile, currency preferences & verified account</span>

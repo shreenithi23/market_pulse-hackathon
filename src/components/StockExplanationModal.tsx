@@ -78,31 +78,31 @@ export const StockExplanationModal: React.FC<StockExplanationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#3D4852]/40 p-4 font-body backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-[#E0E5EC] p-6 md:p-8 rounded-[32px] shadow-neu-extrude-lg my-8 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#3D4852]/40 p-3 sm:p-4 font-body backdrop-blur-md overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-[#E0E5EC] p-4 sm:p-6 md:p-8 rounded-[28px] sm:rounded-[32px] shadow-neu-extrude-lg my-4 sm:my-8 max-h-[94vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between pb-4 mb-6 border-b border-[#D1D9E6] gap-3">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-[#E0E5EC] shadow-neu-inset flex items-center justify-center font-display font-black text-lg text-[#6C63FF]">
+        <div className="flex flex-wrap items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-6 border-b border-[#D1D9E6] gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-3 sm:gap-3.5">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#E0E5EC] shadow-neu-inset flex items-center justify-center font-display font-black text-base sm:text-lg text-[#6C63FF] shrink-0">
               {stock.symbol.slice(0, 2)}
             </div>
             <div>
-              <div className="flex items-center gap-2.5">
-                <h3 className="font-display font-black text-2xl text-[#3D4852] tracking-tight">
+              <div className="flex items-center gap-2">
+                <h3 className="font-display font-black text-xl sm:text-2xl text-[#3D4852] tracking-tight">
                   {stock.symbol}
                 </h3>
-                <span className="bg-[#E0E5EC] shadow-neu-extrude-sm px-2.5 py-0.5 font-display text-[11px] font-bold text-[#6C63FF] rounded-xl">
+                <span className="bg-[#E0E5EC] shadow-neu-extrude-sm px-2 sm:px-2.5 py-0.5 font-display text-[10px] sm:text-[11px] font-bold text-[#6C63FF] rounded-xl">
                   {stock.sector}
                 </span>
               </div>
-              <p className="text-xs text-[#6B7280] font-medium mt-0.5">{stock.name}</p>
+              <p className="text-[11px] sm:text-xs text-[#6B7280] font-medium mt-0.5">{stock.name}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => onOpenThresholdModal(stock.symbol)}
-              className="btn-neu px-3.5 py-2 text-xs font-bold rounded-2xl flex items-center gap-1.5"
+              className="btn-neu px-3 sm:px-3.5 py-2 text-xs font-bold rounded-2xl flex items-center gap-1.5 min-h-[38px] touch-manipulation"
               title="Configure sensitivity rules"
             >
               <Sliders className="h-3.5 w-3.5 text-[#6C63FF]" strokeWidth={2.2} />
@@ -111,7 +111,7 @@ export const StockExplanationModal: React.FC<StockExplanationModalProps> = ({
 
             <button
               onClick={onClose}
-              className="btn-neu w-9 h-9 rounded-2xl text-[#6B7280] hover:text-[#3D4852]"
+              className="btn-neu w-9 h-9 rounded-2xl text-[#6B7280] hover:text-[#3D4852] min-h-[38px] min-w-[38px] touch-manipulation flex items-center justify-center"
               title="Close explanation"
             >
               <X className="h-4 w-4" strokeWidth={2.2} />
@@ -469,21 +469,21 @@ export const StockExplanationModal: React.FC<StockExplanationModalProps> = ({
           ))}
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-between border-t border-[#D1D9E6] pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#D1D9E6] pt-4">
             <button
               onClick={() => {
                 onRemoveStock(stock.symbol);
                 onClose();
               }}
-              className="btn-neu text-[#E53E3E] hover:text-[#C53030] px-4 py-2 text-xs font-bold rounded-2xl flex items-center gap-1.5"
+              className="btn-neu text-[#E53E3E] hover:text-[#C53030] px-3.5 sm:px-4 py-2 text-xs font-bold rounded-2xl flex items-center gap-1.5 min-h-[38px] touch-manipulation"
             >
-              <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+              <Trash2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
               <span>Remove from Watchlist</span>
             </button>
 
             <button
               onClick={onClose}
-              className="btn-neu-primary px-6 py-2 text-xs font-bold rounded-2xl"
+              className="btn-neu-primary px-5 sm:px-6 py-2 text-xs font-bold rounded-2xl min-h-[38px] touch-manipulation"
             >
               Close Explanation
             </button>

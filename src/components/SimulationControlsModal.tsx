@@ -185,6 +185,57 @@ export const SimulationControlsModal: React.FC<SimulationControlsModalProps> = (
             </div>
           </div>
 
+          {/* Section 4: Target Alert & Sensitivity Edge Cases */}
+          <div className="bg-[#E0E5EC] p-5 rounded-2xl shadow-neu-extrude-sm border border-[#6C63FF]/30">
+            <div className="flex items-center gap-2.5 font-display font-extrabold text-sm text-[#3D4852] mb-3">
+              <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-[#E0E5EC] shadow-neu-inset-sm text-[#6C63FF] text-xs font-bold">
+                4
+              </span>
+              <span>Alert Sensitivity & Anomaly Edge Cases</span>
+            </div>
+            <div className="space-y-2.5">
+              <button
+                onClick={() => {
+                  onSimulateScenario('FLASH_CRASH_SWEEP');
+                  onClose();
+                }}
+                className="w-full bg-[#E0E5EC] p-3.5 text-left rounded-2xl shadow-neu-extrude-sm hover:shadow-neu-extrude active:shadow-neu-inset transition-all duration-300 flex justify-between items-center group"
+              >
+                <div>
+                  <div className="font-display font-extrabold text-xs text-[#38B2AC] flex items-center gap-1.5">
+                    <span>⚡ Simulate Flash Crash Liquidity Sweep (-8.2%)</span>
+                  </div>
+                  <div className="font-body text-[11px] text-[#6B7280] font-medium mt-0.5">
+                    45-second order-book vacuum in NVDA. Detects V-pattern & strictly preserves memory baseline anchor.
+                  </div>
+                </div>
+                <span className="font-display font-bold text-[10px] text-[#38B2AC] bg-[#E0E5EC] shadow-neu-inset-sm px-3 py-1 rounded-xl">
+                  Trigger
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onSimulateScenario('TARGET_WHIPSAW_HOVER');
+                  onClose();
+                }}
+                className="w-full bg-[#E0E5EC] p-3.5 text-left rounded-2xl shadow-neu-extrude-sm hover:shadow-neu-extrude active:shadow-neu-inset transition-all duration-300 flex justify-between items-center group"
+              >
+                <div>
+                  <div className="font-display font-extrabold text-xs text-[#6C63FF] flex items-center gap-1.5">
+                    <span>🛡️ Simulate Target Price Whipsaw & Hovering</span>
+                  </div>
+                  <div className="font-body text-[11px] text-[#6B7280] font-medium mt-0.5">
+                    Oscillates price repeatedly at threshold boundary to demonstrate 0.5% hysteresis band & cooldown suppression.
+                  </div>
+                </div>
+                <span className="font-display font-bold text-[10px] text-[#6C63FF] bg-[#E0E5EC] shadow-neu-inset-sm px-3 py-1 rounded-xl">
+                  Trigger
+                </span>
+              </button>
+            </div>
+          </div>
+
           {/* Reset button & footer */}
           <div className="flex justify-between items-center border-t border-[#D1D9E6] pt-4">
             <button

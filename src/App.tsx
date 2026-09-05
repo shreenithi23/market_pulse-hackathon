@@ -233,10 +233,17 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...thresholds, userNotes: notes })
       });
+      const resData = await res.json();
       if (res.ok) {
-        flashStatus(`Updated alert rules & buy target for ${symbol}`);
+        if (resData.warning) {
+          flashStatus(`⚠️ Note: ${resData.warning}`);
+        } else {
+          flashStatus(`Updated alert rules & buy target for ${symbol}`);
+        }
         setEditingSymbol(null);
         fetchData();
+      } else {
+        flashStatus(`Error: ${resData.error || 'Failed to update sensitivity'}`);
       }
     } catch (err) {
       flashStatus(`Error updating sensitivity`);
@@ -562,14 +569,14 @@ export default function App() {
       <CommandLineBar onExecuteCommand={handleExecuteCommand} />
 
       {/* 3. Top-Level Tab Navigation: Simple Main Watchlist vs. Dedicated Specialized Tabs */}
-      <nav className="border-b border-[#D1D9E6] bg-[#E0E5EC] px-4 py-3 sticky top-0 z-20 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 overflow-x-auto">
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <nav className="border-b border-[#D1D9E6] bg-[#E0E5EC] px-3 sm:px-4 py-2.5 sm:py-3 sticky top-0 z-20 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 py-0.5">
             {/* Tab 1: Main Watchlist */}
             <button
               id="tab-nav-watchlist"
               onClick={() => setActiveTab('WATCHLIST')}
-              className={`px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 transition-all duration-300 ${
+              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
                 activeTab === 'WATCHLIST'
                   ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
                   : 'btn-neu text-[#3D4852]'
@@ -589,7 +596,7 @@ export default function App() {
             <button
               id="tab-nav-diversification"
               onClick={() => setActiveTab('PORTFOLIO_DIVERSIFICATION')}
-              className={`px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 transition-all duration-300 ${
+              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
                 activeTab === 'PORTFOLIO_DIVERSIFICATION'
                   ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
                   : 'btn-neu text-[#3D4852]'
@@ -608,7 +615,7 @@ export default function App() {
             <button
               id="tab-nav-correlated"
               onClick={() => setActiveTab('CORRELATED_CHANGES')}
-              className={`px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 transition-all duration-300 ${
+              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
                 activeTab === 'CORRELATED_CHANGES'
                   ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
                   : 'btn-neu text-[#3D4852]'
@@ -625,7 +632,7 @@ export default function App() {
             <button
               id="tab-nav-clusters"
               onClick={() => setActiveTab('DYNAMIC_CLUSTERS')}
-              className={`px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 transition-all duration-300 ${
+              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
                 activeTab === 'DYNAMIC_CLUSTERS'
                   ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
                   : 'btn-neu text-[#3D4852]'
@@ -642,7 +649,7 @@ export default function App() {
             <button
               id="tab-nav-events"
               onClick={() => setActiveTab('EVENT_LIFECYCLE')}
-              className={`px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 transition-all duration-300 ${
+              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
                 activeTab === 'EVENT_LIFECYCLE'
                   ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
                   : 'btn-neu text-[#3D4852]'
@@ -661,7 +668,7 @@ export default function App() {
             <button
               id="tab-nav-briefing"
               onClick={() => setActiveTab('EXECUTIVE_BRIEFING')}
-              className={`px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 transition-all duration-300 ${
+              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
                 activeTab === 'EXECUTIVE_BRIEFING'
                   ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
                   : 'btn-neu text-[#3D4852]'
@@ -673,7 +680,7 @@ export default function App() {
           </div>
 
           {/* Quick Stats Pill */}
-          <div className="hidden lg:flex items-center gap-2 text-xs font-display font-bold text-[#6B7280]">
+          <div className="hidden xl:flex items-center gap-2 text-xs font-display font-bold text-[#6B7280] shrink-0">
             <span className="text-[#E53E3E] bg-[#E0E5EC] shadow-neu-inset-sm px-2.5 py-1 rounded-xl">
               {data.systemSummary.needsAttentionCount} Critical
             </span>
@@ -755,6 +762,14 @@ export default function App() {
             briefing={data.personalizedExecutiveBriefing}
             compressedInsights={data.compressedInsights}
             totalTracked={data.systemSummary.totalTracked}
+            attentionScores={data.attentionScores}
+            events={data.events}
+            systemSummary={data.systemSummary}
+            memory={data.memory}
+            stocks={data.stocks}
+            onSelectStock={(sym) => setExplainingSymbol(sym)}
+            onResetSnapshot={handleTakeSnapshot}
+            onNavigateToTab={(tab) => setActiveTab(tab)}
           />
         )}
       </main>
@@ -821,8 +836,10 @@ export default function App() {
       {currentEditingRecord && (
         <StockThresholdModal
           item={currentEditingRecord}
+          quote={data?.stocks.find(s => s.symbol === currentEditingRecord.symbol)}
           onSave={(thresholds, notes) => handleSaveThreshold(currentEditingRecord.symbol, thresholds, notes)}
           onClose={() => setEditingSymbol(null)}
+          onDismissBuyTrigger={handleDismissBuyReminder}
         />
       )}
 

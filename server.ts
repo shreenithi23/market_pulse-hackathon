@@ -556,26 +556,87 @@ function calculateAttentionScore(symbol: string, sectorMovements: SectorMovement
     });
   }
 
-  // --- Signal F: Target Buy Price Reached (Rupees or USD) ---
+  // --- Signal F: Target Buy Price Reached (with Whipsaw & Hysteresis Protection) ---
   let buyTargetPoints = 0;
   let reachedBuyTarget = false;
+  let isAlertThrottled = false;
   if (thresholds.targetBuyPrice && thresholds.targetBuyActive !== false) {
     const targetCurrency = thresholds.targetBuyCurrency || (quote.currency === "INR" ? "INR" : "INR");
     const currentPriceInTarget = targetCurrency === "INR"
       ? (quote.currency === "INR" ? quote.price : Number((quote.price * USD_INR_EXCHANGE_RATE).toFixed(2)))
       : (quote.currency === "USD" ? quote.price : Number((quote.price / USD_INR_EXCHANGE_RATE).toFixed(2)));
 
-    reachedBuyTarget = currentPriceInTarget <= thresholds.targetBuyPrice || Boolean(thresholds.targetBuyTriggered);
+    const targetType = thresholds.targetType || (thresholds.targetBuyPrice >= currentPriceInTarget ? 'DIP_BUY' : 'BREAKOUT_BUY');
+    const hysteresisPct = thresholds.hysteresisBufferPct ?? 0.5;
+    const cooldownMs = (thresholds.cooldownMinutes ?? 30) * 60 * 1000;
+
+    const isDirectHit = targetType === 'DIP_BUY'
+      ? currentPriceInTarget <= thresholds.targetBuyPrice
+      : currentPriceInTarget >= thresholds.targetBuyPrice;
+
+    // Hysteresis Band check
+    const rearmPrice = targetType === 'DIP_BUY'
+      ? Number((thresholds.targetBuyPrice * (1 + hysteresisPct / 100)).toFixed(2))
+      : Number((thresholds.targetBuyPrice * (1 - hysteresisPct / 100)).toFixed(2));
+
+    // If currently marked triggered, does price rebound beyond hysteresis band to rearm?
+    if (thresholds.targetBuyTriggered) {
+      const hasRebounded = targetType === 'DIP_BUY'
+        ? currentPriceInTarget >= rearmPrice
+        : currentPriceInTarget <= rearmPrice;
+
+      if (hasRebounded) {
+        // Price rebounded sufficiently! Re-arm trigger
+        thresholds.targetBuyTriggered = false;
+      } else if (!isDirectHit) {
+        // Price is hovering in the hysteresis band! Suppress oscillation
+        thresholds.suppressedOscillationsCount = (thresholds.suppressedOscillationsCount || 0) + 1;
+      }
+    }
+
+    // Evaluate trigger condition
+    if (isDirectHit) {
+      const now = Date.now();
+      const timeSinceLastAlert = thresholds.lastAlertDispatchedAt ? (now - thresholds.lastAlertDispatchedAt) : Infinity;
+
+      // Check if price progressed deeper (>= 2% past last alert price)
+      let significantProgression = false;
+      if (thresholds.lastAlertPrice) {
+        const deeperPct = targetType === 'DIP_BUY'
+          ? ((thresholds.lastAlertPrice - currentPriceInTarget) / thresholds.lastAlertPrice) * 100
+          : ((currentPriceInTarget - thresholds.lastAlertPrice) / thresholds.lastAlertPrice) * 100;
+        if (deeperPct >= 2.0) {
+          significantProgression = true;
+        }
+      }
+
+      if (timeSinceLastAlert < cooldownMs && !significantProgression && thresholds.targetBuyTriggered) {
+        // Throttled by cooldown!
+        isAlertThrottled = true;
+        thresholds.suppressedOscillationsCount = (thresholds.suppressedOscillationsCount || 0) + 1;
+      } else {
+        // Fresh alert dispatch
+        thresholds.targetBuyTriggered = true;
+        thresholds.targetBuyTriggeredAt = thresholds.targetBuyTriggeredAt || now;
+        thresholds.lastAlertDispatchedAt = now;
+        thresholds.lastAlertPrice = currentPriceInTarget;
+      }
+      reachedBuyTarget = true;
+    } else {
+      reachedBuyTarget = Boolean(thresholds.targetBuyTriggered);
+    }
+
     const symSymbol = targetCurrency === "INR" ? "₹" : "$";
+    const modeLabel = targetType === 'BREAKOUT_BUY' ? 'Breakout Target' : 'Dip Buy Target';
 
     if (reachedBuyTarget) {
       buyTargetPoints = 25;
       signals.push({
         type: "THRESHOLD_BREACH",
-        label: "Target Buy Price Reached",
+        label: `${modeLabel} Reached`,
         points: buyTargetPoints,
         maxPoints: 25,
-        description: `Target buy alert triggered at ${symSymbol}${currentPriceInTarget.toLocaleString()} (Target: ≤ ${symSymbol}${thresholds.targetBuyPrice.toLocaleString()})`,
+        description: `${modeLabel} triggered at ${symSymbol}${currentPriceInTarget.toLocaleString()} (Target: ${targetType === 'BREAKOUT_BUY' ? '≥' : '≤'} ${symSymbol}${thresholds.targetBuyPrice.toLocaleString()})${thresholds.suppressedOscillationsCount ? ` [${thresholds.suppressedOscillationsCount} hover crosses suppressed]` : ''}`,
         currentValue: currentPriceInTarget,
         baselineValue: thresholds.targetBuyPrice,
         deltaPct: Number((((currentPriceInTarget - thresholds.targetBuyPrice) / thresholds.targetBuyPrice) * 100).toFixed(2)),
@@ -584,16 +645,41 @@ function calculateAttentionScore(symbol: string, sectorMovements: SectorMovement
 
       rationales.push({
         signalType: "THRESHOLD_BREACH",
-        headline: `🎯 BUY REMINDER: Reached ${symSymbol}${thresholds.targetBuyPrice.toLocaleString()}`,
-        detail: `${symbol} reached your target purchase level of ${symSymbol}${thresholds.targetBuyPrice.toLocaleString()} (Current: ${symSymbol}${currentPriceInTarget.toLocaleString()}). Ready for trade entry.`,
+        headline: `🎯 ${modeLabel.toUpperCase()}: Reached ${symSymbol}${thresholds.targetBuyPrice.toLocaleString()}`,
+        detail: `${symbol} reached your target purchase level of ${symSymbol}${thresholds.targetBuyPrice.toLocaleString()} (Current: ${symSymbol}${currentPriceInTarget.toLocaleString()}). Anti-whipsaw 0.5% hysteresis active${isAlertThrottled ? ' (notification throttled to prevent spam).' : '.'}`,
         impactScore: buyTargetPoints,
         isCustomAlert: true
       });
     }
   }
 
+  // --- Signal G: Liquidity Sweep / Flash Crash V-Shape Reversal Detection ---
+  let sweepPoints = 0;
+  if (quote.liquiditySweep && quote.liquiditySweep.detected) {
+    sweepPoints = 15;
+    signals.push({
+      type: "VOLATILITY_EXPANSION",
+      label: "Liquidity Sweep V-Reversal",
+      points: sweepPoints,
+      maxPoints: 20,
+      description: `V-Shape mean reversion: ${quote.liquiditySweep.dropPct}% flash dip absorbed in ${quote.liquiditySweep.durationSeconds}s. Memory baseline preserved.`,
+      currentValue: quote.price,
+      baselineValue: quote.liquiditySweep.preDropPrice,
+      deltaPct: quote.liquiditySweep.dropPct,
+      severity: "WARN"
+    });
+
+    rationales.push({
+      signalType: "VOLATILITY_EXPANSION",
+      headline: `⚡ Liquidity Sweep: V-Shape Reversal (${quote.liquiditySweep.dropPct}%)`,
+      detail: quote.liquiditySweep.notes,
+      impactScore: sweepPoints,
+      isCustomAlert: false
+    });
+  }
+
   // Calculate Total Score (capped at 100)
-  const rawScore = pricePoints + volPoints + volatPoints + thresholdPoints + sectorPoints + buyTargetPoints;
+  const rawScore = pricePoints + volPoints + volatPoints + thresholdPoints + sectorPoints + buyTargetPoints + sweepPoints;
   const totalScore = Math.min(100, Math.max(0, rawScore));
 
   // Determine Category
@@ -874,26 +960,40 @@ function buildDeterministicBriefing(
   const recoveringEvents = events.filter(e => e.currentState === "RECOVERING");
   const criticalSymbols = needsAttention.map(s => s.symbol);
 
-  let briefing = `>>> EXECUTIVE BRIEFING | BASELINE SNAPSHOT: ${timeElapsedStr.toUpperCase()} AGO\n`;
+  const sections: string[] = [];
 
+  // Section 1: Snapshot Drift Anchor
+  sections.push(`### ⏱️ Baseline Drift & Posture\nAnchor snapshot established **${timeElapsedStr.toUpperCase()} AGO**. Monitoring ${totalTracked} watchlist assets against customized volatility and baseline price envelopes.`);
+
+  // Section 2: Alert Matrix & Portfolio Health
   if (criticalSymbols.length === 0 && worthKnowing.length === 0) {
-    briefing += `MARKET QUIET: All ${totalTracked} tracked assets remain anchored within normal variance envelopes. Zero threshold breaches recorded. No immediate intervention recommended.`;
+    sections.push(`### 🛡️ Portfolio Status: All Quiet\nAll ${totalTracked} tracked assets remain anchored within normal variance envelopes. Zero threshold breaches or abnormal volume surges recorded. No immediate intervention recommended.`);
   } else {
-    briefing += `ALERT MATRIX: ${criticalSymbols.length} critical / ${worthKnowing.length} secondary alerts recorded across ${totalTracked} tracked assets. `;
+    sections.push(`### 📊 Portfolio Alert Matrix\nDetected **${criticalSymbols.length} critical priority** and **${worthKnowing.length} secondary alerts** across your portfolio.\n• High Urgency Assets: ${criticalSymbols.length > 0 ? criticalSymbols.map(s => `**${s}**`).join(', ') : 'None'}\n• Secondary Awareness: ${worthKnowing.length > 0 ? worthKnowing.map(s => `**${s.symbol}**`).join(', ') : 'None'}`);
+
+    // Section 3: Primary Driver Spotlight
     if (criticalSymbols.length > 0) {
       const topPick = needsAttention[0];
-      briefing += `PRIMARY DRIVER: ${topPick.symbol} leads urgency queue (Score ${topPick.totalScore}/100) triggered by ${topPick.primaryDriver.toLowerCase()}. `;
+      sections.push(`### 🎯 Primary Urgency Driver: ${topPick.symbol}\n**${topPick.symbol}** leads the attention queue with an urgency score of **${topPick.totalScore}/100**.\nTrigger Mechanism: ${topPick.primaryDriver}. Immediate review is advised to evaluate positional risk.`);
     }
-    if (escalatedEvents.length > 0) {
-      briefing += `LIFECYCLE STATUS: ${escalatedEvents.map(e => e.symbol).join(", ")} currently in ESCALATED regime with abnormal volume. `;
+
+    // Section 4: Lifecycle Dynamics
+    if (escalatedEvents.length > 0 || recoveringEvents.length > 0) {
+      const dynamics: string[] = [];
+      if (escalatedEvents.length > 0) {
+        dynamics.push(`• **Escalated Momentum**: ${escalatedEvents.map(e => `**${e.symbol}**`).join(', ')} currently experiencing elevated order-flow surges and expanding volatility.`);
+      }
+      if (recoveringEvents.length > 0) {
+        dynamics.push(`• **Mean-Reversion Recovery**: ${recoveringEvents.map(e => `**${e.symbol}**`).join(', ')} exhibiting stabilization and price reversion back towards the baseline anchor.`);
+      }
+      sections.push(`### 🔄 Market Lifecycle Dynamics\n${dynamics.join('\n')}`);
     }
-    if (recoveringEvents.length > 0) {
-      briefing += `${recoveringEvents.map(e => e.symbol).join(", ")} undergoing mean-reversion recovery. `;
-    }
-    briefing += `RECOMMENDATION: Review filtered attention pane and verify customized exit thresholds.`;
+
+    // Section 5: Actionable Recommendations
+    sections.push(`### 📋 Tactical Recommendations\n• **Review Attention Queue**: Inspect ${criticalSymbols.join(', ') || 'priority symbols'} to confirm if price moves align with broader market themes.\n• **Verify Order Triggers**: Check buy reminder targets and stop-loss levels for triggered assets.\n• **Re-anchor Baseline**: If current market prints represent the new norm, take a new snapshot to silence baseline drift.`);
   }
 
-  return briefing;
+  return sections.join("\n\n");
 }
 
 // Background Gemini Refresher (Non-blocking)
@@ -919,13 +1019,19 @@ Current Context:
 - Worth knowing assets: ${worthKnowing.map(s => s.symbol).join(", ") || "None"}
 - Active lifecycle events: ${events.map(e => `${e.symbol} [${e.currentState}]: ${e.summary}`).join("; ")}
 
-Generate a concise, crisp 3-4 sentence terminal executive briefing for the returning trader.
+Generate a structured, beautifully formatted executive briefing for the returning trader with clear Markdown sections.
+Do NOT write as a single paragraph. Use this structure:
+### ⏱️ Baseline Drift: [Time elapsed]
+### 📊 Portfolio Alert Matrix: [Summary of critical vs secondary alerts]
+### 🎯 Primary Driver: [Top asset and reason]
+### 🔄 Lifecycle Dynamics: [Escalated vs recovering status]
+### 📋 Tactical Recommendations: [Specific bullet points]
+
 Rules:
-- Adopt a disciplined, hacker/quant terminal tone (e.g. "STATUS REPORT", "SINCE LAST CHECK:").
-- Strictly highlight what has MEANINGFULLY changed since the user last checked.
-- Explicitly cite why certain items demand attention (price breakouts, volume multiples, sector correlation).
-- Highlight lifecycle progression (developing vs recovering).
-- Keep text monospaced and readable, under 90 words.`;
+- Adopt a disciplined, quantitative terminal tone.
+- Bold key ticker symbols and scores.
+- Use clean bullet points where appropriate.
+- Keep concise, high-signal, under 140 words.`;
 
   ai.models.generateContent({
     model: "gemini-3.8-flash",
@@ -970,6 +1076,11 @@ function synthesizeExecutiveBriefing(
 ): string {
   const now = Date.now();
   const deterministic = buildDeterministicBriefing(timeElapsedStr, scores, events);
+
+  // Invalidate legacy unformatted single-paragraph cached briefings
+  if (cachedBriefing && cachedBriefing.startsWith(">>> EXECUTIVE BRIEFING")) {
+    cachedBriefing = "";
+  }
 
   // If client is available and cache is empty or older than 60 seconds, attempt non-blocking refresh
   const ai = getGeminiClient();
@@ -1209,13 +1320,40 @@ async function assembleMarketOverview(): Promise<MarketOverviewResponse> {
         ? (q.priceINR || (q.currency === 'INR' ? q.price : Number((q.price * USD_INR_EXCHANGE_RATE).toFixed(2))))
         : (q.currency === 'USD' ? q.price : Number((q.price / USD_INR_EXCHANGE_RATE).toFixed(2)));
 
-      const isTriggered = currentPriceInTarget <= thresh.targetBuyPrice;
+      const targetType = thresh.targetType || (currentPriceInTarget <= thresh.targetBuyPrice ? 'DIP_BUY' : 'BREAKOUT_BUY');
+      const hysteresisPct = thresh.hysteresisBufferPct ?? 0.5;
+      const cooldownMs = (thresh.cooldownMinutes ?? 30) * 60 * 1000;
+
+      const isDirectHit = targetType === 'DIP_BUY'
+        ? currentPriceInTarget <= thresh.targetBuyPrice
+        : currentPriceInTarget >= thresh.targetBuyPrice;
+
+      const rearmRequiredPrice = targetType === 'DIP_BUY'
+        ? Number((thresh.targetBuyPrice * (1 + hysteresisPct / 100)).toFixed(2))
+        : Number((thresh.targetBuyPrice * (1 - hysteresisPct / 100)).toFixed(2));
+
+      // Hysteresis rearm check
+      if (thresh.targetBuyTriggered) {
+        const hasRebounded = targetType === 'DIP_BUY'
+          ? currentPriceInTarget >= rearmRequiredPrice
+          : currentPriceInTarget <= rearmRequiredPrice;
+        if (hasRebounded) {
+          thresh.targetBuyTriggered = false;
+        }
+      }
+
+      const isTriggered = isDirectHit || Boolean(thresh.targetBuyTriggered);
       const gapPct = Number((((currentPriceInTarget - thresh.targetBuyPrice) / thresh.targetBuyPrice) * 100).toFixed(2));
 
-      if (isTriggered && !thresh.targetBuyTriggered) {
+      if (isDirectHit && !thresh.targetBuyTriggered) {
         thresh.targetBuyTriggered = true;
         thresh.targetBuyTriggeredAt = Date.now();
+        thresh.lastAlertDispatchedAt = Date.now();
+        thresh.lastAlertPrice = currentPriceInTarget;
       }
+
+      const timeSinceAlert = thresh.lastAlertDispatchedAt ? (now - thresh.lastAlertDispatchedAt) : Infinity;
+      const isThrottled = Boolean(thresh.targetBuyTriggered && timeSinceAlert < cooldownMs);
 
       buyReminders.push({
         symbol: item.symbol,
@@ -1223,12 +1361,19 @@ async function assembleMarketOverview(): Promise<MarketOverviewResponse> {
         sector: q.sector,
         targetBuyPrice: thresh.targetBuyPrice,
         targetBuyCurrency: targetCurrency,
+        targetType,
         currentPrice: q.price,
         priceInTargetCurrency: currentPriceInTarget,
         gapPct,
-        triggered: Boolean(thresh.targetBuyTriggered || isTriggered),
+        triggered: isTriggered,
         triggeredAt: thresh.targetBuyTriggeredAt,
-        note: thresh.targetBuyNote || `Buy reminder target: ${targetCurrency === 'INR' ? '₹' : '$'}${thresh.targetBuyPrice.toLocaleString()}`
+        note: thresh.targetBuyNote || `Buy reminder target: ${targetCurrency === 'INR' ? '₹' : '$'}${thresh.targetBuyPrice.toLocaleString()}`,
+        hysteresisBufferPct: hysteresisPct,
+        cooldownMinutes: thresh.cooldownMinutes ?? 30,
+        suppressedOscillationsCount: thresh.suppressedOscillationsCount || 0,
+        isThrottled,
+        rearmRequiredPrice,
+        antiWhipsawActive: true
       });
     }
   });
@@ -1307,15 +1452,32 @@ setInterval(() => {
     quote.priceINR = quote.currency === "INR" ? newPrice : Number((newPrice * USD_INR_EXCHANGE_RATE).toFixed(2));
     quote.lastUpdated = now;
 
-    // Check buy reminder target trigger
+    // Check buy reminder target trigger with Hysteresis & Anti-Whipsaw Guard
     const watchlistEntry = userWatchlist.get(quote.symbol);
     if (watchlistEntry?.customThresholds?.targetBuyPrice && watchlistEntry.customThresholds.targetBuyActive !== false) {
       const thresh = watchlistEntry.customThresholds;
       const targetCurrency = thresh.targetBuyCurrency || "INR";
       const currentInTarget = targetCurrency === "INR" ? (quote.priceINR || newPrice) : (quote.currency === "USD" ? newPrice : Number((newPrice / USD_INR_EXCHANGE_RATE).toFixed(2)));
-      if (currentInTarget <= thresh.targetBuyPrice && !thresh.targetBuyTriggered) {
+      const targetType = thresh.targetType || (thresh.targetBuyPrice >= currentInTarget ? 'DIP_BUY' : 'BREAKOUT_BUY');
+      const hysteresisPct = thresh.hysteresisBufferPct ?? 0.5;
+      const isDirectHit = targetType === 'DIP_BUY' ? currentInTarget <= thresh.targetBuyPrice : currentInTarget >= thresh.targetBuyPrice;
+      const rearmPrice = targetType === 'DIP_BUY'
+        ? Number((thresh.targetBuyPrice * (1 + hysteresisPct / 100)).toFixed(2))
+        : Number((thresh.targetBuyPrice * (1 - hysteresisPct / 100)).toFixed(2));
+
+      if (thresh.targetBuyTriggered) {
+        const hasRebounded = targetType === 'DIP_BUY' ? currentInTarget >= rearmPrice : currentInTarget <= rearmPrice;
+        if (hasRebounded) {
+          thresh.targetBuyTriggered = false;
+        } else if (!isDirectHit) {
+          // Hovering in hysteresis band: suppress oscillation
+          thresh.suppressedOscillationsCount = (thresh.suppressedOscillationsCount || 0) + 1;
+        }
+      } else if (isDirectHit) {
         thresh.targetBuyTriggered = true;
         thresh.targetBuyTriggeredAt = now;
+        thresh.lastAlertDispatchedAt = now;
+        thresh.lastAlertPrice = currentInTarget;
       }
     }
 
@@ -1823,6 +1985,33 @@ app.put("/api/watchlist/:symbol/threshold", (req, res) => {
     return res.status(404).json({ error: "Symbol not in watchlist" });
   }
 
+  const { targetBuyPrice, targetBuyCurrency, targetType, hysteresisBufferPct, cooldownMinutes } = req.body;
+
+  // In-line Validation: Reject <= 0 and NaN
+  if (targetBuyPrice !== undefined) {
+    const numPrice = Number(targetBuyPrice);
+    if (isNaN(numPrice) || numPrice <= 0) {
+      return res.status(400).json({ error: "Target price must be a valid positive number greater than 0" });
+    }
+  }
+
+  // Warning check if >30% away from spot
+  let deviationWarning: string | undefined;
+  if (targetBuyPrice !== undefined && Number(targetBuyPrice) > 0) {
+    const quote = liveQuotes.get(cleanSymbol);
+    const targetCurr = targetBuyCurrency || existing.customThresholds.targetBuyCurrency || "INR";
+    const currentInTarget = quote
+      ? (targetCurr === "INR"
+          ? (quote.priceINR || (quote.currency === "INR" ? quote.price : Number((quote.price * USD_INR_EXCHANGE_RATE).toFixed(2))))
+          : (quote.currency === "USD" ? quote.price : Number((quote.price / USD_INR_EXCHANGE_RATE).toFixed(2))))
+      : Number(targetBuyPrice);
+
+    const distancePct = Math.abs(currentInTarget - Number(targetBuyPrice)) / (currentInTarget || 1) * 100;
+    if (distancePct > 30) {
+      deviationWarning = `Target price (${targetCurr === "INR" ? "₹" : "$"}${Number(targetBuyPrice).toLocaleString()}) is ${distancePct.toFixed(1)}% away from current spot price (${targetCurr === "INR" ? "₹" : "$"}${currentInTarget.toLocaleString()}). Please verify currency and decimals.`;
+    }
+  }
+
   existing.customThresholds = {
     ...existing.customThresholds,
     ...req.body
@@ -1830,7 +2019,7 @@ app.put("/api/watchlist/:symbol/threshold", (req, res) => {
   if (req.body.userNotes !== undefined) existing.userNotes = req.body.userNotes;
   if (req.body.tags !== undefined) existing.tags = req.body.tags;
 
-  res.json({ success: true, item: existing });
+  res.json({ success: true, item: existing, warning: deviationWarning });
 });
 
 // Buy Target Reminder Specific Endpoints
@@ -1841,9 +2030,9 @@ app.post("/api/watchlist/:symbol/buy-reminder", (req, res) => {
     return res.status(404).json({ error: "Symbol not in watchlist" });
   }
 
-  const { targetBuyPrice, targetBuyCurrency = "INR", targetBuyNote } = req.body;
+  const { targetBuyPrice, targetBuyCurrency = "INR", targetBuyNote, targetType, hysteresisBufferPct = 0.5, cooldownMinutes = 30 } = req.body;
   if (!targetBuyPrice || isNaN(Number(targetBuyPrice)) || Number(targetBuyPrice) <= 0) {
-    return res.status(400).json({ error: "Valid positive targetBuyPrice is required" });
+    return res.status(400).json({ error: "Valid positive targetBuyPrice greater than 0 is required" });
   }
 
   const quote = liveQuotes.get(cleanSymbol);
@@ -1854,19 +2043,34 @@ app.post("/api/watchlist/:symbol/buy-reminder", (req, res) => {
         : (quote.currency === "USD" ? quote.price : Number((quote.price / USD_INR_EXCHANGE_RATE).toFixed(2))))
     : Number(targetBuyPrice);
 
-  const isAlreadyTriggered = currentInTarget <= Number(targetBuyPrice);
+  const numTarget = Number(targetBuyPrice);
+  const mode: 'DIP_BUY' | 'BREAKOUT_BUY' = targetType || (numTarget <= currentInTarget ? 'DIP_BUY' : 'BREAKOUT_BUY');
+  const isAlreadyTriggered = mode === 'DIP_BUY' ? currentInTarget <= numTarget : currentInTarget >= numTarget;
+
+  // Warning check if >30% away from spot price
+  let deviationWarning: string | undefined;
+  const distancePct = Math.abs(currentInTarget - numTarget) / (currentInTarget || 1) * 100;
+  if (distancePct > 30) {
+    deviationWarning = `Target price (${targetCurrency === "INR" ? "₹" : "$"}${numTarget.toLocaleString()}) is ${distancePct.toFixed(1)}% away from current spot price (${targetCurrency === "INR" ? "₹" : "$"}${currentInTarget.toLocaleString()}). Please verify currency and decimals.`;
+  }
 
   existing.customThresholds = {
     ...existing.customThresholds,
-    targetBuyPrice: Number(targetBuyPrice),
+    targetBuyPrice: numTarget,
     targetBuyCurrency: targetCurrency,
+    targetType: mode,
     targetBuyActive: true,
     targetBuyTriggered: isAlreadyTriggered,
     targetBuyTriggeredAt: isAlreadyTriggered ? Date.now() : undefined,
-    targetBuyNote: targetBuyNote || `Buy reminder target set at ${targetCurrency === "INR" ? "₹" : "$"}${Number(targetBuyPrice).toLocaleString()}`
+    targetBuyNote: targetBuyNote || `${mode === 'BREAKOUT_BUY' ? 'Breakout' : 'Dip buy'} target set at ${targetCurrency === "INR" ? "₹" : "$"}${numTarget.toLocaleString()}`,
+    hysteresisBufferPct: Number(hysteresisBufferPct) || 0.5,
+    cooldownMinutes: Number(cooldownMinutes) || 30,
+    lastAlertDispatchedAt: isAlreadyTriggered ? Date.now() : undefined,
+    lastAlertPrice: isAlreadyTriggered ? currentInTarget : undefined,
+    suppressedOscillationsCount: existing.customThresholds?.suppressedOscillationsCount || 0
   };
 
-  res.json({ success: true, item: existing });
+  res.json({ success: true, item: existing, warning: deviationWarning });
 });
 
 app.post("/api/watchlist/:symbol/buy-reminder/dismiss", (req, res) => {
@@ -1903,8 +2107,13 @@ app.post("/api/memory/snapshot", (req, res) => {
 
   const snapshotQuotes: Record<string, { price: number; volume: number; volatility: number; timestamp: number }> = {};
   liveQuotes.forEach((quote, sym) => {
+    // Preserve baseline anchor: do NOT contaminate memory baseline with fleeting flash crash troughs!
+    const effectivePrice = (quote.liquiditySweep && quote.liquiditySweep.detected && !quote.liquiditySweep.recoveredAt)
+      ? quote.liquiditySweep.preDropPrice
+      : quote.price;
+
     snapshotQuotes[sym] = {
-      price: quote.price,
+      price: effectivePrice,
       volume: quote.volume,
       volatility: quote.volatility,
       timestamp: now
@@ -2052,6 +2261,119 @@ const handleSimulationTrigger = (req: express.Request, res: express.Response) =>
       feedStatus = "LIVE";
       feedLatency = 24;
     }, 5000);
+  } else if (scenario === "FLASH_CRASH_SWEEP") {
+    // "Flash Crash" V-Shape Reversals: A momentary liquidity hole drops a stock by 8% for 45 seconds, then fully rebounds.
+    // Handling: Detect fast-mean-reverting V-patterns, tag as a Liquidity Sweep / Wrench, and prevent baseline distortion.
+    const targetSymbol = "NVDA";
+    const q = liveQuotes.get(targetSymbol) || Array.from(liveQuotes.values())[0];
+    if (q) {
+      const preDropPrice = q.price;
+      const dropPct = -8.2;
+      const troughPrice = Number((preDropPrice * 0.918).toFixed(2));
+      q.price = troughPrice;
+      q.change = Number((q.change - (preDropPrice - troughPrice)).toFixed(2));
+      q.changePct = Number((q.changePct + dropPct).toFixed(2));
+      q.volume = Math.round(q.volume * 2.8);
+      q.volatility += 14.5;
+      q.dayLow = Math.min(q.dayLow, troughPrice);
+
+      q.ticks.push({
+        time: new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        price: troughPrice,
+        volume: q.volume
+      });
+
+      // Tag with Liquidity Sweep metadata and PRESERVE memory baseline
+      q.liquiditySweep = {
+        detected: true,
+        dropPct: -8.2,
+        troughPrice,
+        preDropPrice,
+        durationSeconds: 45,
+        recoveredAt: 0, // In progress
+        baselinePreserved: true,
+        notes: `Flash crash liquidity air-pocket absorbed within 45s. V-Shape mean-reversion confirmed. Memory baseline preserved at $${preDropPrice.toFixed(2)} to prevent false structural shift.`
+      };
+
+      const sweepEvt: MarketEvent = {
+        id: `evt_sweep_${q.symbol}_${now}`,
+        symbol: q.symbol,
+        sector: q.sector,
+        scope: "STOCK_SPECIFIC",
+        title: `⚡ Flash Crash Liquidity Sweep: ${q.symbol} -8.2% V-Reversal`,
+        summary: `Instant liquidity hole dumped ${q.symbol} to $${troughPrice.toFixed(2)}. Algorithmic V-pattern detected; memory baseline anchor strictly preserved.`,
+        currentState: "RECOVERING",
+        severity: "CRITICAL",
+        detectedAt: now,
+        lastTransitionAt: now,
+        peakDeviationPct: -8.2,
+        currentDeviationPct: -8.2,
+        volumeMultiple: 2.8,
+        signalsInvolved: ["PRICE_MOVE", "VOLUME_SPIKE", "VOLATILITY_EXPANSION"],
+        stateHistory: [
+          { state: "DEVELOPING", timestamp: now - 30000, metricSummary: "-2.1% rapid print", reason: "Order book liquidity gap" },
+          { state: "ESCALATED", timestamp: now - 15000, metricSummary: "-8.2% flash trough", reason: "Stop loss cascade" },
+          { state: "RECOVERING", timestamp: now, metricSummary: "Rapid bid replenishment", reason: "V-Shape Mean Reversion confirmed. Baseline intact." }
+        ]
+      };
+      activeEvents.set(sweepEvt.id, sweepEvt);
+
+      // Automated V-shape rebound 4.5 seconds later
+      setTimeout(() => {
+        const recoverQ = liveQuotes.get(q.symbol);
+        if (recoverQ) {
+          recoverQ.price = Number((preDropPrice * 0.996).toFixed(2));
+          recoverQ.change = Number((recoverQ.price - preDropPrice).toFixed(2));
+          recoverQ.changePct = Number((recoverQ.changePct + 8.0).toFixed(2));
+          recoverQ.dayHigh = Math.max(recoverQ.dayHigh, recoverQ.price);
+          recoverQ.ticks.push({
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            price: recoverQ.price,
+            volume: Math.round(recoverQ.volume * 1.2)
+          });
+          if (recoverQ.liquiditySweep) {
+            recoverQ.liquiditySweep.recoveredAt = Date.now();
+          }
+          if (activeEvents.has(sweepEvt.id)) {
+            const evt = activeEvents.get(sweepEvt.id)!;
+            evt.currentState = "RESOLVED";
+            evt.currentDeviationPct = -0.4;
+            evt.stateHistory.push({
+              state: "RESOLVED",
+              timestamp: Date.now(),
+              metricSummary: "Fully recovered to pre-flash price (-0.4% from baseline)",
+              reason: "V-shape bounce verified. Memory baseline remained undisturbed."
+            });
+          }
+        }
+      }, 4500);
+    }
+  } else if (scenario === "TARGET_WHIPSAW_HOVER") {
+    // Whipsaw & Target Price "Hovering": Price oscillates around target threshold to test 0.5% hysteresis & 30-min throttling
+    let targetSym = "TCS";
+    let entry = userWatchlist.get(targetSym);
+    if (!entry) {
+      const first = Array.from(userWatchlist.values())[0];
+      targetSym = first?.symbol || "NVDA";
+      entry = first;
+    }
+    const q = liveQuotes.get(targetSym);
+    if (q && entry) {
+      const currentInINR = q.priceINR || (q.currency === "INR" ? q.price : Math.round(q.price * USD_INR_EXCHANGE_RATE));
+      entry.customThresholds.targetBuyPrice = Math.round(currentInINR);
+      entry.customThresholds.targetBuyActive = true;
+      entry.customThresholds.targetType = "DIP_BUY";
+      entry.customThresholds.hysteresisBufferPct = 0.5;
+      entry.customThresholds.cooldownMinutes = 30;
+      entry.customThresholds.targetBuyTriggered = true;
+      entry.customThresholds.lastAlertDispatchedAt = Date.now() - 60000;
+      entry.customThresholds.lastAlertPrice = currentInINR;
+      entry.customThresholds.suppressedOscillationsCount = (entry.customThresholds.suppressedOscillationsCount || 0) + 14;
+
+      // Oscillate price right on boundary (within 0.5% hysteresis band)
+      q.priceINR = Math.round(currentInINR * 1.002);
+      q.price = q.currency === "INR" ? q.priceINR : Number((q.priceINR / USD_INR_EXCHANGE_RATE).toFixed(2));
+    }
   }
 
   res.json({ success: true, scenarioApplied: scenario, timestamp: now });

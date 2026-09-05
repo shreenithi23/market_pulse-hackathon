@@ -59,7 +59,22 @@ export interface StockQuote {
   low52: number;
   lastUpdated: number;
   ticks: Array<{ time: string; price: number; volume: number }>;
+  // "Flash Crash" V-Shape Reversal & Liquidity Sweep detection
+  liquiditySweep?: LiquiditySweepInfo;
 }
+
+export interface LiquiditySweepInfo {
+  detected: boolean;
+  dropPct: number;
+  troughPrice: number;
+  preDropPrice: number;
+  durationSeconds: number;
+  recoveredAt: number;
+  baselinePreserved: boolean;
+  notes: string;
+}
+
+export type TargetBuyType = 'DIP_BUY' | 'BREAKOUT_BUY';
 
 export interface UserThresholdConfig {
   priceChangePct: number; // e.g. 2.5%
@@ -74,6 +89,13 @@ export interface UserThresholdConfig {
   targetBuyTriggered?: boolean;
   targetBuyTriggeredAt?: number;
   targetBuyNote?: string;
+  // Anti-Whipsaw & In-line Validation Config
+  targetType?: TargetBuyType; // 'DIP_BUY' (price <= target) or 'BREAKOUT_BUY' (price >= target)
+  hysteresisBufferPct?: number; // e.g. 0.5% required rebound before re-arming
+  cooldownMinutes?: number; // e.g. 30 minutes notification throttling
+  lastAlertDispatchedAt?: number;
+  lastAlertPrice?: number;
+  suppressedOscillationsCount?: number; // Count of whipsaw hover crosses suppressed
 }
 
 export interface WatchlistRecord {
@@ -181,12 +203,20 @@ export interface BuyReminderAlert {
   sector: string;
   targetBuyPrice: number;
   targetBuyCurrency: 'INR' | 'USD';
+  targetType?: TargetBuyType;
   currentPrice: number;
   priceInTargetCurrency: number;
   gapPct: number;
   triggered: boolean;
   triggeredAt?: number;
   note?: string;
+  // Edge Case: Whipsaw & Hysteresis Protection
+  hysteresisBufferPct?: number;
+  cooldownMinutes?: number;
+  suppressedOscillationsCount?: number;
+  isThrottled?: boolean;
+  rearmRequiredPrice?: number;
+  antiWhipsawActive?: boolean;
 }
 
 export interface SectorAllocation {

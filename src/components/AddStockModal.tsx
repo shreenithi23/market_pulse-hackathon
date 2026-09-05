@@ -32,24 +32,24 @@ export const AddStockModal: React.FC<AddStockModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#3D4852]/40 p-4 font-body backdrop-blur-md">
-      <div className="relative w-full max-w-lg bg-[#E0E5EC] p-6 md:p-8 rounded-[32px] shadow-neu-extrude-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#3D4852]/40 p-3 sm:p-4 font-body backdrop-blur-md overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-[#E0E5EC] p-4 sm:p-6 md:p-8 rounded-[28px] sm:rounded-[32px] shadow-neu-extrude-lg my-4 sm:my-6 max-h-[94vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 mb-5 border-b border-[#D1D9E6]">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#E0E5EC] shadow-neu-inset flex items-center justify-center text-[#6C63FF]">
+        <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-5 border-b border-[#D1D9E6]">
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#E0E5EC] shadow-neu-inset flex items-center justify-center text-[#6C63FF] shrink-0">
               <Plus className="h-5 w-5" strokeWidth={2.5} />
             </div>
             <div>
-              <h3 className="font-display font-extrabold text-lg text-[#3D4852] tracking-tight">
+              <h3 className="font-display font-extrabold text-base sm:text-lg text-[#3D4852] tracking-tight">
                 Track Stock in Watchlist
               </h3>
-              <p className="text-xs text-[#6B7280] font-medium">Add tickers to monitor anomaly triggers</p>
+              <p className="text-[11px] sm:text-xs text-[#6B7280] font-medium">Add tickers to monitor anomaly triggers</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="btn-neu w-9 h-9 rounded-xl text-[#6B7280] hover:text-[#3D4852]"
+            className="btn-neu w-9 h-9 rounded-xl text-[#6B7280] hover:text-[#3D4852] min-h-[38px] min-w-[38px] touch-manipulation flex items-center justify-center shrink-0"
           >
             <X className="h-4 w-4" strokeWidth={2.2} />
           </button>
