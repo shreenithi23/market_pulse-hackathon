@@ -4,7 +4,8 @@ build/
 coverage/
 .DS_Store
 *.log
-.env*
-.env.example
+.env
+.env.local
+.env.*.local
 data/*.db*
 data/*.sqlite*
