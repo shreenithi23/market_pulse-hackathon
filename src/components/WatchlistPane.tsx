@@ -130,72 +130,7 @@ export const WatchlistPane: React.FC<WatchlistPaneProps> = ({
 
   return (
     <div className="flex-1 p-4 max-w-7xl mx-auto w-full font-body">
-      {/* 1. High Priority Buy Target Alerts Banner */}
-      {triggeredReminders.length > 0 && (
-        <div className="mb-6 card-neu p-4.5 bg-[#E0E5EC] border-2 border-[#38B2AC]/60 rounded-3xl animate-in fade-in slide-in-from-top-2 duration-300 shadow-neu-extrude-sm">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#E0E5EC] shadow-neu-inset flex items-center justify-center text-[#38B2AC] shrink-0 mt-0.5">
-                <Target className="h-5 w-5 animate-bounce" strokeWidth={2.4} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="bg-[#E0E5EC] shadow-neu-inset-sm text-[#38B2AC] text-[10px] font-black uppercase px-2 py-0.5 rounded-lg">
-                    Target Met
-                  </span>
-                  <h3 className="font-display font-black text-sm text-[#3D4852]">
-                    {triggeredReminders.length} Buy Price {triggeredReminders.length === 1 ? 'Target' : 'Targets'} Reached!
-                  </h3>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#2C7A7B] bg-[#E0E5EC] shadow-neu-inset-sm px-2 py-0.5 rounded-lg">
-                    <ShieldCheck className="h-3 w-3 text-[#38B2AC]" />
-                    <span>0.5% Hysteresis Guard Active</span>
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                  {triggeredReminders.map(r => {
-                    const isBreakout = r.targetType === 'BREAKOUT_BUY';
-                    return (
-                      <div
-                        key={r.symbol}
-                        onClick={() => onSelectStock(r.symbol)}
-                        className="cursor-pointer font-mono font-bold text-xs text-[#2C7A7B] bg-[#E0E5EC] shadow-neu-inset-sm px-2.5 py-1 rounded-xl hover:text-[#6C63FF] transition-colors flex items-center gap-1.5 flex-wrap"
-                      >
-                        {isBreakout ? <ArrowUpRight className="h-3 w-3 text-[#6C63FF]" /> : <ArrowDownRight className="h-3 w-3 text-[#38B2AC]" />}
-                        <span>{r.symbol}: {isBreakout ? 'Breakout' : 'Dip'} Hit {r.targetBuyCurrency === 'INR' ? '₹' : '$'}{r.targetBuyPrice.toLocaleString()} (Now {r.targetBuyCurrency === 'INR' ? '₹' : '$'}{r.priceInTargetCurrency.toLocaleString()})</span>
-                        {r.rearmPrice && (
-                          <span className="text-[10px] font-normal text-[#6B7280]">
-                            • Re-arm {isBreakout ? '≤' : '≥'} {r.targetBuyCurrency === 'INR' ? '₹' : '$'}{r.rearmPrice.toLocaleString()}
-                          </span>
-                        )}
-                        {r.suppressedOscillationsCount !== undefined && r.suppressedOscillationsCount > 0 && (
-                          <span className="text-[10px] text-[#38B2AC] bg-[#E0E5EC] shadow-neu-inset-sm px-1.5 py-0.2 rounded-md">
-                            🛡️ {r.suppressedOscillationsCount} hover checks throttled
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-              {triggeredReminders.map(r => onDismissBuyReminder && (
-                <button
-                  key={r.symbol}
-                  onClick={() => onDismissBuyReminder(r.symbol)}
-                  className="btn-neu px-3 py-1.5 text-[11px] font-bold text-[#6B7280] hover:text-[#3D4852] rounded-xl"
-                  title={`Dismiss alert for ${r.symbol}`}
-                >
-                  Dismiss {r.symbol}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 2. Top Controls: Category Tabs + Currency Switcher + Search + Track Stock */}
+      {/* 1. Top Controls: Category Tabs + Currency Switcher + Search + Track Stock */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-[#D1D9E6]">
         {/* Category Filters (Horizontally scrollable with touch on mobile/tablet) */}
         <div className="overflow-x-auto no-scrollbar pb-1 -mx-2 px-2 sm:mx-0 sm:px-0 flex items-center gap-2 shrink-0">
@@ -401,9 +336,9 @@ export const WatchlistPane: React.FC<WatchlistPaneProps> = ({
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl shadow-neu-inset-sm text-[11px] font-mono font-bold">
                             {isTargetMet ? (
                               <>
-                                <CheckCircle2 className="h-3.5 w-3.5 text-[#38B2AC] shrink-0 animate-pulse" />
+                                <CheckCircle2 className="h-3.5 w-3.5 text-[#38B2AC] shrink-0" />
                                 <span className="text-[#2C7A7B]">
-                                  {thresh.targetType === 'BREAKOUT_BUY' ? 'Breakout Hit' : 'Dip Target Met'}: {targetCurrency === 'INR' ? '₹' : '$'}{thresh.targetBuyPrice?.toLocaleString()}
+                                  {thresh.targetType === 'BREAKOUT_BUY' ? 'Breakout Target' : 'Buy Target'}: {targetCurrency === 'INR' ? '₹' : '$'}{thresh.targetBuyPrice?.toLocaleString()}
                                 </span>
                               </>
                             ) : (

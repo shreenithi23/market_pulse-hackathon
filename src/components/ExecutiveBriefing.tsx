@@ -398,11 +398,9 @@ export const ExecutiveBriefing: React.FC<ExecutiveBriefingProps> = ({
         {/* 3. PRIMARY CONTENT VIEW: DASHBOARD OR FORMATTED DOCUMENT */}
         {viewMode === 'DASHBOARD' ? (
           <div className="space-y-6">
-            {/* Bento Grid: 2 Large Featured Columns */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column (2 spans): Primary Driver Spotlight & Lifecycle Dynamics */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Marquee Headline Box */}
+            {/* Primary Driver Spotlight & Lifecycle Dynamics */}
+            <div className="space-y-6">
+              {/* Marquee Headline Box */}
                 <div className="bg-[#E0E5EC] p-6 rounded-[28px] shadow-neu-extrude-sm border border-[#6C63FF]/30 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 font-display font-bold text-xs uppercase tracking-wider text-[#6C63FF]">
@@ -621,104 +619,7 @@ export const ExecutiveBriefing: React.FC<ExecutiveBriefingProps> = ({
                   </div>
                 </div>
               </div>
-
-              {/* Right Column (1 span): Tactical Checklist & Recommendations */}
-              <div className="space-y-6">
-                <div className="bg-[#E0E5EC] p-6 rounded-[28px] shadow-neu-extrude-sm space-y-4">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-8 h-8 rounded-xl bg-[#E0E5EC] shadow-neu-inset flex items-center justify-center text-[#38B2AC]">
-                      <CheckCircle2 className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <h3 className="font-display font-bold text-sm text-[#3D4852] uppercase tracking-wider">
-                        Tactical Action Items
-                      </h3>
-                      <span className="text-[11px] text-[#6B7280]">Synthesized trader next steps</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 pt-1">
-                    <div className="bg-[#E0E5EC] p-3 rounded-2xl shadow-neu-inset text-xs space-y-1">
-                      <div className="flex items-center gap-2 font-display font-bold text-[#3D4852]">
-                        <span className="w-4 h-4 rounded-full bg-[#E0E5EC] shadow-neu-inset-sm flex items-center justify-center text-[10px] text-[#6C63FF]">
-                          1
-                        </span>
-                        <span>Inspect Urgent Alerts</span>
-                      </div>
-                      <p className="text-[11px] text-[#6B7280] pl-6 leading-relaxed">
-                        Review high priority asset cards to verify whether price departures are idiosyncratic or sector-wide.
-                      </p>
-                    </div>
-
-                    <div className="bg-[#E0E5EC] p-3 rounded-2xl shadow-neu-inset text-xs space-y-1">
-                      <div className="flex items-center gap-2 font-display font-bold text-[#3D4852]">
-                        <span className="w-4 h-4 rounded-full bg-[#E0E5EC] shadow-neu-inset-sm flex items-center justify-center text-[10px] text-[#6C63FF]">
-                          2
-                        </span>
-                        <span>Confirm Target Buy Triggers</span>
-                      </div>
-                      <p className="text-[11px] text-[#6B7280] pl-6 leading-relaxed">
-                        Check active buy reminder triggers and acknowledge or re-arm target thresholds with the 0.5% hysteresis guard.
-                      </p>
-                    </div>
-
-                    <div className="bg-[#E0E5EC] p-3 rounded-2xl shadow-neu-inset text-xs space-y-1">
-                      <div className="flex items-center gap-2 font-display font-bold text-[#3D4852]">
-                        <span className="w-4 h-4 rounded-full bg-[#E0E5EC] shadow-neu-inset-sm flex items-center justify-center text-[10px] text-[#6C63FF]">
-                          3
-                        </span>
-                        <span>Re-Anchor Memory Snapshot</span>
-                      </div>
-                      <p className="text-[11px] text-[#6B7280] pl-6 leading-relaxed">
-                        Once you've reviewed the current state, click "Reset Anchor" to capture current prices as the new comparative baseline.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Navigation Panel */}
-                <div className="bg-[#E0E5EC] p-5 rounded-[28px] shadow-neu-inset space-y-3">
-                  <span className="font-display font-bold uppercase text-[10px] text-[#6B7280] block">
-                    Jump to Analytical Modules
-                  </span>
-                  <div className="grid grid-cols-2 gap-2">
-                    {onNavigateToTab && (
-                      <>
-                        <button
-                          onClick={() => onNavigateToTab('WATCHLIST')}
-                          className="btn-neu p-2.5 text-left rounded-xl text-xs font-bold text-[#3D4852] flex items-center justify-between"
-                        >
-                          <span>Watchlist & Targets</span>
-                          <ArrowRight className="h-3 w-3 text-[#6C63FF]" />
-                        </button>
-                        <button
-                          onClick={() => onNavigateToTab('SECTORS')}
-                          className="btn-neu p-2.5 text-left rounded-xl text-xs font-bold text-[#3D4852] flex items-center justify-between"
-                        >
-                          <span>Sector Pulse</span>
-                          <ArrowRight className="h-3 w-3 text-[#6C63FF]" />
-                        </button>
-                        <button
-                          onClick={() => onNavigateToTab('CLUSTERS')}
-                          className="btn-neu p-2.5 text-left rounded-xl text-xs font-bold text-[#3D4852] flex items-center justify-between"
-                        >
-                          <span>Dynamic Clusters</span>
-                          <ArrowRight className="h-3 w-3 text-[#6C63FF]" />
-                        </button>
-                        <button
-                          onClick={() => onNavigateToTab('EVENT_LIFECYCLE')}
-                          className="btn-neu p-2.5 text-left rounded-xl text-xs font-bold text-[#3D4852] flex items-center justify-between"
-                        >
-                          <span>Lifecycle States</span>
-                          <ArrowRight className="h-3 w-3 text-[#6C63FF]" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
         ) : (
           /* DOCUMENT VIEW: Beautifully Formatted Multi-Section Report */
           <div className="space-y-4">
