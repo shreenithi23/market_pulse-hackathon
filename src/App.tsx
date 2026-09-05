@@ -5,7 +5,6 @@ import {
   WatchlistRecord
 } from './types/market';
 import { TerminalHeader } from './components/TerminalHeader';
-import { CommandLineBar } from './components/CommandLineBar';
 import { MemoryBaselineBanner } from './components/MemoryBaselineBanner';
 import { ExecutiveBriefing } from './components/ExecutiveBriefing';
 import { WatchlistPane } from './components/WatchlistPane';
@@ -317,164 +316,6 @@ export default function App() {
     }
   };
 
-  // Command execution parser
-  const handleExecuteCommand = async (cmdText: string) => {
-    const parts = cmdText.trim().split(/\s+/);
-    const cmd = parts[0]?.toLowerCase();
-    const arg1 = parts[1]?.toLowerCase();
-    const arg2 = parts[2];
-
-    switch (cmd) {
-      case 'tab':
-        if (arg1 === 'watchlist' || arg1 === 'main') setActiveTab('WATCHLIST');
-        else if (arg1 === 'diversification' || arg1 === 'portfolio' || arg1 === 'hedge') setActiveTab('PORTFOLIO_DIVERSIFICATION');
-        else if (arg1 === 'correlated' || arg1 === 'sectors' || arg1 === 'radar') setActiveTab('CORRELATED_CHANGES');
-        else if (arg1 === 'clusters' || arg1 === 'cluster') setActiveTab('DYNAMIC_CLUSTERS');
-        else if (arg1 === 'events' || arg1 === 'lifecycle') setActiveTab('EVENT_LIFECYCLE');
-        else if (arg1 === 'briefing' || arg1 === 'memo') setActiveTab('EXECUTIVE_BRIEFING');
-        else flashStatus('Usage: tab <watchlist|diversification|sectors|clusters|events|briefing>');
-        break;
-
-      case 'explain':
-        if (parts[1]) {
-          const sym = parts[1].toUpperCase();
-          const found = data?.stocks.find(s => s.symbol === sym);
-          if (found) {
-            setExplainingSymbol(sym);
-          } else {
-            flashStatus(`Stock ${sym} not found`);
-          }
-        } else {
-          flashStatus('Usage: explain <SYMBOL>');
-        }
-        break;
-
-      case 'snapshot':
-        await handleTakeSnapshot();
-        break;
-
-      case 'compare':
-        if (arg1 === '1h') handleSelectOffset(1);
-        else if (arg1 === '4h') handleSelectOffset(4);
-        else if (arg1 === '24h') handleSelectOffset(24);
-        else flashStatus('Usage: compare <1h|4h|24h>');
-        break;
-
-      case 'add':
-        if (parts[1]) await handleAddStock(parts[1].toUpperCase());
-        else flashStatus('Usage: add <SYMBOL>');
-        break;
-
-      case 'remove':
-      case 'delete':
-        if (parts[1]) await handleRemoveStock(parts[1].toUpperCase());
-        else flashStatus('Usage: remove <SYMBOL>');
-        break;
-
-      case 'filter':
-        if (arg1 === 'all') setSelectedCategory('ALL');
-        else if (arg1 === 'attention' || arg1 === 'attn') setSelectedCategory('NEEDS_ATTENTION');
-        else if (arg1 === 'knowing') setSelectedCategory('WORTH_KNOWING');
-        else if (arg1 === 'normal' || arg1 === 'stable') setSelectedCategory('NO_MEANINGFUL_CHANGE');
-        else flashStatus('Usage: filter <all|attention|knowing|normal>');
-        break;
-
-      case 'threshold':
-        if (parts[1] && arg2) {
-          const val = parseFloat(arg2);
-          if (!isNaN(val)) {
-            await handleSaveThreshold(parts[1].toUpperCase(), { priceChangePct: val });
-          } else {
-            flashStatus('Threshold must be a valid number (e.g. 3.5)');
-          }
-        } else {
-          flashStatus('Usage: threshold <SYMBOL> <PERCENT>');
-        }
-        break;
-
-      case 'target':
-      case 'buy':
-        if (parts[1] && arg2) {
-          const sym = parts[1].toUpperCase();
-          const targetVal = parseFloat(arg2);
-          if (!isNaN(targetVal)) {
-            try {
-              const res = await fetch(`/api/watchlist/${sym}/buy-reminder`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  targetBuyPrice: targetVal,
-                  currency: 'INR',
-                  notes: parts.slice(3).join(' ') || undefined
-                })
-              });
-              if (res.ok) {
-                flashStatus(`🎯 Buy reminder set for ${sym} at ₹${targetVal.toLocaleString()}`);
-                fetchData();
-              } else {
-                flashStatus(`Failed to set buy reminder for ${sym}`);
-              }
-            } catch (e) {
-              flashStatus(`Error setting buy reminder`);
-            }
-          } else {
-            flashStatus('Usage: target <SYMBOL> <INR_PRICE>');
-          }
-        } else {
-          flashStatus('Usage: target <SYMBOL> <INR_PRICE>');
-        }
-        break;
-
-      case 'diversify':
-      case 'portfolio':
-      case 'sectors':
-        setActiveTab('PORTFOLIO_DIVERSIFICATION');
-        flashStatus('Switched to Portfolio Diversification & Sector Gap Intelligence');
-        break;
-
-      case 'profile':
-        if (currentUser) {
-          setIsProfileModalOpen(true);
-          flashStatus(`Opened profile for ${currentUser.name || currentUser.email}`);
-        } else {
-          setIsAuthModalOpen(true);
-          flashStatus('Please sign in or register to access profile preferences');
-        }
-        break;
-
-      case 'login':
-      case 'signin':
-      case 'register':
-      case 'auth':
-        setCurrentView('AUTH_PAGE');
-        flashStatus('Navigated to main Authentication & Registration portal');
-        break;
-
-      case 'logout':
-        handleLogout();
-        break;
-
-      case 'sim':
-        if (arg1 === 'tech-rally') handleSimulateScenario('TECH_SECTOR_RALLY');
-        else if (arg1 === 'energy-dip') handleSimulateScenario('ENERGY_PULLBACK');
-        else if (arg1 === 'nvda') handleSimulateScenario('NVDA_BREAKOUT');
-        else if (arg1 === 'resolve-events') handleSimulateScenario('RESOLVE_EVENTS');
-        else if (arg1 === 'conflict') handleSimulateScenario('FEED_ARBITRAGE_CONFLICT');
-        else flashStatus('Usage: sim <tech-rally|energy-dip|nvda|resolve-events|conflict>');
-        break;
-
-      case 'sync':
-      case 'refresh':
-        await fetchData(true);
-        flashStatus('Synchronized market data');
-        break;
-
-      default:
-        flashStatus(`Unrecognized command: '${cmd}'. Click 'Guide' for commands.`);
-        break;
-    }
-  };
-
   // 1. If currently on Main Authentication & Landing Gateway Page, render MainAuthPage immediately
   if (currentView === 'AUTH_PAGE') {
     return (
@@ -566,10 +407,7 @@ export default function App() {
         onGoToAuthPage={() => setCurrentView('AUTH_PAGE')}
       />
 
-      {/* 2. Command Strip */}
-      <CommandLineBar onExecuteCommand={handleExecuteCommand} />
-
-      {/* 3. Top-Level Tab Navigation: Simple Main Watchlist vs. Dedicated Specialized Tabs */}
+      {/* Top-Level Tab Navigation: Simple Main Watchlist vs. Dedicated Specialized Tabs */}
       <nav className="border-b border-[#D1D9E6] bg-[#E0E5EC] px-3 sm:px-4 py-2.5 sm:py-3 sticky top-0 z-20 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4 overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 py-0.5">
