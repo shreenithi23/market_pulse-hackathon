@@ -19,6 +19,7 @@ import { SimulationControlsModal } from './components/SimulationControlsModal';
 import { AuthModal } from './components/AuthModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { MainAuthPage } from './components/MainAuthPage';
+import { AnalyticsSidebar } from './components/AnalyticsSidebar';
 import { UserProfile } from './types/auth';
 import {
   Sparkles,
@@ -30,7 +31,9 @@ import {
   GitBranch,
   FileText,
   PieChart,
-  Target
+  Target,
+  Menu,
+  ArrowLeft
 } from 'lucide-react';
 
 export type ActiveAppTab =
@@ -49,6 +52,7 @@ export default function App() {
 
   // Tab Navigation: Main Page is 'WATCHLIST'
   const [activeTab, setActiveTab] = useState<ActiveAppTab>('WATCHLIST');
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   // Watchlist Category Filter
   const [selectedCategory, setSelectedCategory] = useState<AttentionCategory | 'ALL'>('ALL');
@@ -411,7 +415,21 @@ export default function App() {
       <nav className="border-b border-[#D1D9E6] bg-[#E0E5EC] px-3 sm:px-4 py-2.5 sm:py-3 sticky top-0 z-20 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4 overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 py-0.5">
-            {/* Tab 1: Main Watchlist */}
+            {/* 1. Sidebar Toggle Button: Opens Analytical Modules Drawer */}
+            <button
+              id="btn-toggle-sidebar"
+              onClick={() => setIsSidebarOpen(true)}
+              className="btn-neu px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation text-[#3D4852] hover:text-[#6C63FF]"
+              title="Open Market Analytics Modules"
+            >
+              <Menu className="h-4 w-4 text-[#6C63FF]" strokeWidth={2.4} />
+              <span>Intelligence Modules</span>
+              <span className="bg-[#E0E5EC] shadow-neu-inset-sm text-[#6C63FF] px-2 py-0.5 text-[10px] font-bold rounded-lg">
+                5
+              </span>
+            </button>
+
+            {/* 2. Main Watchlist Tab Button */}
             <button
               id="tab-nav-watchlist"
               onClick={() => setActiveTab('WATCHLIST')}
@@ -431,91 +449,34 @@ export default function App() {
               )}
             </button>
 
-            {/* Tab 2: Portfolio Diversification & Sector Gap Intelligence */}
-            <button
-              id="tab-nav-diversification"
-              onClick={() => setActiveTab('PORTFOLIO_DIVERSIFICATION')}
-              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
-                activeTab === 'PORTFOLIO_DIVERSIFICATION'
-                  ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
-                  : 'btn-neu text-[#3D4852]'
-              }`}
-            >
-              <PieChart className="h-3.5 w-3.5" strokeWidth={2.5} />
-              <span>Diversification</span>
-              {data.diversification?.recommendations && data.diversification.recommendations.length > 0 && (
-                <span className="bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset-sm px-2 py-0.5 text-[10px] font-bold rounded-lg">
-                  {data.diversification.recommendations.length} Top-K
+            {/* 3. Active Module Breadcrumb (When an analytical module is selected) */}
+            {activeTab !== 'WATCHLIST' && (
+              <div className="flex items-center gap-2 pl-2 border-l border-[#D1D9E6]">
+                <span className="bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset px-3 py-1.5 text-xs font-display font-bold uppercase rounded-xl flex items-center gap-1.5 shrink-0">
+                  {activeTab === 'EXECUTIVE_BRIEFING' && <FileText className="h-3.5 w-3.5" strokeWidth={2.4} />}
+                  {activeTab === 'PORTFOLIO_DIVERSIFICATION' && <PieChart className="h-3.5 w-3.5" strokeWidth={2.4} />}
+                  {activeTab === 'CORRELATED_CHANGES' && <Compass className="h-3.5 w-3.5" strokeWidth={2.4} />}
+                  {activeTab === 'DYNAMIC_CLUSTERS' && <Layers className="h-3.5 w-3.5" strokeWidth={2.4} />}
+                  {activeTab === 'EVENT_LIFECYCLE' && <GitBranch className="h-3.5 w-3.5" strokeWidth={2.4} />}
+                  <span>
+                    {activeTab === 'EXECUTIVE_BRIEFING' && 'Executive Briefing'}
+                    {activeTab === 'PORTFOLIO_DIVERSIFICATION' && 'Portfolio Diversification'}
+                    {activeTab === 'CORRELATED_CHANGES' && 'Correlated Changes'}
+                    {activeTab === 'DYNAMIC_CLUSTERS' && 'Dynamic Clusters'}
+                    {activeTab === 'EVENT_LIFECYCLE' && 'Event Lifecycle'}
+                  </span>
                 </span>
-              )}
-            </button>
 
-            {/* Tab 3: Correlated Change Detection */}
-            <button
-              id="tab-nav-correlated"
-              onClick={() => setActiveTab('CORRELATED_CHANGES')}
-              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
-                activeTab === 'CORRELATED_CHANGES'
-                  ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
-                  : 'btn-neu text-[#3D4852]'
-              }`}
-            >
-              <Compass className="h-3.5 w-3.5" strokeWidth={2.5} />
-              <span>Correlated Changes</span>
-              <span className="bg-[#E0E5EC] shadow-neu-inset-sm px-2 py-0.5 text-[10px] rounded-lg">
-                {data.sectorMovements.length}
-              </span>
-            </button>
-
-            {/* Tab 4: Dynamic Clusters */}
-            <button
-              id="tab-nav-clusters"
-              onClick={() => setActiveTab('DYNAMIC_CLUSTERS')}
-              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
-                activeTab === 'DYNAMIC_CLUSTERS'
-                  ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
-                  : 'btn-neu text-[#3D4852]'
-              }`}
-            >
-              <Layers className="h-3.5 w-3.5" strokeWidth={2.5} />
-              <span>Dynamic Clusters</span>
-              <span className="bg-[#E0E5EC] shadow-neu-inset-sm px-2 py-0.5 text-[10px] rounded-lg">
-                {data.dynamicGroups.length}
-              </span>
-            </button>
-
-            {/* Tab 5: Event Lifecycle */}
-            <button
-              id="tab-nav-events"
-              onClick={() => setActiveTab('EVENT_LIFECYCLE')}
-              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
-                activeTab === 'EVENT_LIFECYCLE'
-                  ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
-                  : 'btn-neu text-[#3D4852]'
-              }`}
-            >
-              <GitBranch className="h-3.5 w-3.5" strokeWidth={2.5} />
-              <span>Event Lifecycle</span>
-              {data.events.length > 0 && (
-                <span className="bg-[#E0E5EC] text-[#E53E3E] shadow-neu-inset-sm px-2 py-0.5 text-[10px] font-bold rounded-lg animate-pulse">
-                  {data.events.length}
-                </span>
-              )}
-            </button>
-
-            {/* Tab 6: Executive Briefing */}
-            <button
-              id="tab-nav-briefing"
-              onClick={() => setActiveTab('EXECUTIVE_BRIEFING')}
-              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
-                activeTab === 'EXECUTIVE_BRIEFING'
-                  ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
-                  : 'btn-neu text-[#3D4852]'
-              }`}
-            >
-              <FileText className="h-3.5 w-3.5" strokeWidth={2.5} />
-              <span>Executive Briefing</span>
-            </button>
+                <button
+                  onClick={() => setActiveTab('WATCHLIST')}
+                  className="btn-neu px-3 py-1.5 text-xs font-bold text-[#6B7280] hover:text-[#3D4852] rounded-xl flex items-center gap-1 min-h-[36px] shrink-0"
+                  title="Return to Main Watchlist"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Back to Watchlist</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Quick Stats Pill */}
@@ -644,6 +605,15 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Analytics Sidebar Drawer: Opens only when toggled */}
+      <AnalyticsSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        activeTab={activeTab}
+        onSelectTab={(tab) => setActiveTab(tab)}
+        data={data}
+      />
 
       {/* MODAL 1: Stock Explanation Modal (When clicking any stock) */}
       {currentExplainingStock && (
