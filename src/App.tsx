@@ -20,7 +20,6 @@ import { SimulationControlsModal } from './components/SimulationControlsModal';
 import { AuthModal } from './components/AuthModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { MainAuthPage } from './components/MainAuthPage';
-import { DatabaseAuditPanel } from './components/DatabaseAuditPanel';
 import { UserProfile } from './types/auth';
 import {
   Sparkles,
@@ -32,8 +31,7 @@ import {
   GitBranch,
   FileText,
   PieChart,
-  Target,
-  Database
+  Target
 } from 'lucide-react';
 
 export type ActiveAppTab =
@@ -42,8 +40,7 @@ export type ActiveAppTab =
   | 'CORRELATED_CHANGES'
   | 'DYNAMIC_CLUSTERS'
   | 'EVENT_LIFECYCLE'
-  | 'EXECUTIVE_BRIEFING'
-  | 'DATABASE_AUDIT';
+  | 'EXECUTIVE_BRIEFING';
 
 export default function App() {
   const [data, setData] = useState<MarketOverviewResponse | null>(null);
@@ -330,12 +327,12 @@ export default function App() {
     switch (cmd) {
       case 'tab':
         if (arg1 === 'watchlist' || arg1 === 'main') setActiveTab('WATCHLIST');
+        else if (arg1 === 'diversification' || arg1 === 'portfolio' || arg1 === 'hedge') setActiveTab('PORTFOLIO_DIVERSIFICATION');
         else if (arg1 === 'correlated' || arg1 === 'sectors' || arg1 === 'radar') setActiveTab('CORRELATED_CHANGES');
         else if (arg1 === 'clusters' || arg1 === 'cluster') setActiveTab('DYNAMIC_CLUSTERS');
         else if (arg1 === 'events' || arg1 === 'lifecycle') setActiveTab('EVENT_LIFECYCLE');
         else if (arg1 === 'briefing' || arg1 === 'memo') setActiveTab('EXECUTIVE_BRIEFING');
-        else if (arg1 === 'db' || arg1 === 'database' || arg1 === 'audit' || arg1 === 'sqlite' || arg1 === 'storage') setActiveTab('DATABASE_AUDIT');
-        else flashStatus('Usage: tab <watchlist|sectors|clusters|events|briefing|database>');
+        else flashStatus('Usage: tab <watchlist|diversification|sectors|clusters|events|briefing>');
         break;
 
       case 'explain':
@@ -681,23 +678,6 @@ export default function App() {
               <FileText className="h-3.5 w-3.5" strokeWidth={2.5} />
               <span>Executive Briefing</span>
             </button>
-
-            {/* Tab 7: SQLite Database & Resilience Audit (Prompts 1-5) */}
-            <button
-              id="tab-nav-db-audit"
-              onClick={() => setActiveTab('DATABASE_AUDIT')}
-              className={`px-3.5 sm:px-4 py-2 text-xs font-display font-bold uppercase tracking-wider rounded-2xl flex items-center gap-2 whitespace-nowrap shrink-0 transition-all duration-300 min-h-[40px] touch-manipulation ${
-                activeTab === 'DATABASE_AUDIT'
-                  ? 'bg-[#E0E5EC] text-[#6C63FF] shadow-neu-inset'
-                  : 'btn-neu text-[#3D4852]'
-              }`}
-            >
-              <Database className="h-3.5 w-3.5" strokeWidth={2.5} />
-              <span>Database & Audit</span>
-              <span className="bg-[#E0E5EC] text-[#28A745] shadow-neu-inset-sm px-2 py-0.5 text-[10px] font-bold rounded-lg flex items-center gap-1">
-                WAL
-              </span>
-            </button>
           </div>
 
           {/* Quick Stats Pill */}
@@ -791,16 +771,6 @@ export default function App() {
             onSelectStock={(sym) => setExplainingSymbol(sym)}
             onResetSnapshot={handleTakeSnapshot}
             onNavigateToTab={(tab) => setActiveTab(tab)}
-          />
-        )}
-
-        {/* TAB 7: SQLITE DATABASE & RESILIENCE AUDIT (Prompts 1-5) */}
-        {activeTab === 'DATABASE_AUDIT' && (
-          <DatabaseAuditPanel
-            data={data}
-            onTakeSnapshot={handleTakeSnapshot}
-            onRefreshData={() => fetchData(true)}
-            flashStatus={flashStatus}
           />
         )}
       </main>

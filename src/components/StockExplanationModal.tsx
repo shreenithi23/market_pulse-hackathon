@@ -181,62 +181,13 @@ export const StockExplanationModal: React.FC<StockExplanationModalProps> = ({
                 }}
               />
             </div>
-
-            {/* Primary Driver Callout */}
-            <div className="bg-[#E0E5EC] p-3.5 rounded-2xl shadow-neu-extrude-sm">
-              <span className="font-display font-bold text-[11px] uppercase tracking-wider text-[#6B7280]">
-                Primary Attention Driver:
-              </span>
-              <p className="font-display font-extrabold text-sm text-[#6C63FF] mt-0.5">
-                {scoreData?.primaryDriver || 'Within standard historical bounds.'}
-              </p>
-            </div>
           </div>
 
-          {/* Section 1: Plain English Explanations */}
+          {/* Mathematical Point Allocation */}
           <div>
             <h4 className="font-display font-extrabold text-xs uppercase tracking-wider text-[#3D4852] mb-3 flex items-center gap-2">
               <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-[#E0E5EC] shadow-neu-inset-sm text-[#6C63FF] text-[11px]">
                 1
-              </span>
-              <span>Plain-English Rationales & Root Cause:</span>
-            </h4>
-
-            {scoreData && scoreData.rationales.length > 0 ? (
-              <div className="space-y-2.5">
-                {scoreData.rationales.map((rat, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-[#E0E5EC] p-4 rounded-2xl shadow-neu-extrude-sm hover:shadow-neu-extrude transition-all duration-300"
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="font-display font-bold text-sm text-[#3D4852]">
-                        {rat.headline}
-                      </span>
-                      {rat.isCustomAlert && (
-                        <span className="bg-[#E0E5EC] shadow-neu-inset-sm text-[#E53E3E] text-[10px] font-display font-bold px-2.5 py-0.5 rounded-lg">
-                          Custom Rule Breached
-                        </span>
-                      )}
-                    </div>
-                    <p className="font-body text-xs text-[#6B7280] font-medium leading-relaxed">
-                      {rat.detail}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-[#E0E5EC] shadow-neu-inset p-4 rounded-2xl text-xs text-[#6B7280] font-medium">
-                No active anomalies or significant deviation detected for this stock. It is currently behaving in accordance with historical baseline distributions.
-              </div>
-            )}
-          </div>
-
-          {/* Section 2: Exact Mathematical Point Allocation */}
-          <div>
-            <h4 className="font-display font-extrabold text-xs uppercase tracking-wider text-[#3D4852] mb-3 flex items-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-lg bg-[#E0E5EC] shadow-neu-inset-sm text-[#6C63FF] text-[11px]">
-                2
               </span>
               <span>Exact Mathematical Point Allocation:</span>
             </h4>

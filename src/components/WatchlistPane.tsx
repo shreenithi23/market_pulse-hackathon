@@ -511,11 +511,6 @@ export const WatchlistPane: React.FC<WatchlistPaneProps> = ({
                           {scoreData ? `${scoreData.totalScore}/100` : '--'}
                         </span>
                       </div>
-
-                      {/* Primary Driver Snippet */}
-                      <p className="font-body text-[11px] text-[#6C63FF] font-medium mt-0.5 max-w-[180px] sm:max-w-[200px] truncate">
-                        {scoreData?.primaryDriver || 'Within normal drift bounds'}
-                      </p>
                     </div>
 
                     <div className="flex items-center gap-2">

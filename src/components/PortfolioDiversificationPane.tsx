@@ -345,15 +345,6 @@ export const PortfolioDiversificationPane: React.FC<PortfolioDiversificationPane
                             </span>
                           </div>
 
-                          {/* Institutional Rationale "Why Pick" */}
-                          <div className="bg-[#E0E5EC] p-2.5 rounded-xl shadow-neu-inset-sm mb-3">
-                            <span className="text-[10px] font-display font-bold uppercase text-[#6B7280] block">
-                              Why this pick:
-                            </span>
-                            <p className="font-body text-xs text-[#3D4852] mt-0.5 leading-relaxed">
-                              {stock.whyPick}
-                            </p>
-                          </div>
                         </div>
 
                         {/* Actions: Add to Watchlist + Set Buy Reminder Target */}
