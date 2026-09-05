@@ -303,14 +303,6 @@ export const WatchlistPane: React.FC<WatchlistPaneProps> = ({
                         <span className="bg-[#E0E5EC] shadow-neu-extrude-sm px-2.5 py-0.5 font-display text-xs font-bold text-[#6C63FF] rounded-xl">
                           {quote.sector}
                         </span>
-                        {item.tags?.map(t => (
-                          <span
-                            key={t}
-                            className="bg-[#E0E5EC] text-[#6B7280] shadow-neu-inset-sm font-mono text-[10px] font-medium px-2 py-0.5 rounded-lg"
-                          >
-                            #{t}
-                          </span>
-                        ))}
                       </div>
 
                       <div className="font-body text-xs font-medium text-[#6B7280] mt-0.5">
